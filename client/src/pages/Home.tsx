@@ -147,7 +147,19 @@ function SectionHeading({ eyebrow, title, action }: { eyebrow?: string; title: s
   return <div className="mb-4 flex items-end justify-between gap-4"><div>{eyebrow && <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.19em] text-[#a16d45]">{eyebrow}</p>}<h2 className="font-display text-xl font-semibold tracking-tight text-[#173f35]">{title}</h2></div>{action}</div>;
 }
 
-function FinancialRhythmChart({ data }: { data: { month: string; receita: number; investimentos: number; gastos: number }[] }) {
+export function financialChartY(value: number, maxValue: number, plotTop = 24, plotBottom = 228) {
+  return plotBottom - (value / Math.max(maxValue, 1)) * (plotBottom - plotTop);
+}
+
+export function financialChartBarY(value: number, maxValue: number, plotTop = 24, plotBottom = 228) {
+  return financialChartY(value, maxValue, plotTop, plotBottom);
+}
+
+export function financialChartLineY(value: number, maxValue: number, plotTop = 24, plotBottom = 228) {
+  return financialChartY(value, maxValue, plotTop, plotBottom);
+}
+
+export function FinancialRhythmChart({ data }: { data: { month: string; receita: number; investimentos: number; gastos: number }[] }) {
   const width = 720;
   const height = 290;
   const plotLeft = 44;
@@ -155,10 +167,9 @@ function FinancialRhythmChart({ data }: { data: { month: string; receita: number
   const plotTop = 24;
   const plotBottom = 228;
   const maxBar = Math.max(...data.map((item) => item.receita), 1);
-  const maxLine = Math.max(...data.flatMap((item) => [item.investimentos, item.gastos]), 1);
   const x = (index: number) => plotLeft + (index * (plotRight - plotLeft)) / Math.max(data.length - 1, 1);
-  const yBar = (value: number) => plotBottom - (value / maxBar) * (plotBottom - plotTop);
-  const yLine = (value: number) => plotBottom - (value / maxLine) * (plotBottom - plotTop);
+  const yBar = (value: number) => financialChartBarY(value, maxBar, plotTop, plotBottom);
+  const yLine = (value: number) => financialChartLineY(value, maxBar, plotTop, plotBottom);
   const linePath = (key: "investimentos" | "gastos") => data.map((item, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${yLine(item[key])}`).join(" ");
   const areaPath = (key: "investimentos" | "gastos") => `${linePath(key)} L ${x(data.length - 1)} ${plotBottom} L ${x(0)} ${plotBottom} Z`;
   return <div className="w-full" aria-label="Ritmo financeiro mensal"><svg viewBox={`0 0 ${width} ${height}`} className="h-[290px] w-full" role="img" aria-label="Receita Total, Investimentos e Despesas por mês"><line x1={plotLeft} x2={plotRight} y1={plotBottom} y2={plotBottom} stroke="#dfe9e2" /><line x1={plotLeft} x2={plotRight} y1={plotTop} y2={plotTop} stroke="#edf1ee" /><line x1={plotLeft} x2={plotRight} y1={(plotTop + plotBottom) / 2} y2={(plotTop + plotBottom) / 2} stroke="#edf1ee" /><text x="8" y={plotTop + 4} fill="#91a098" fontSize="10">{compactCurrency(maxBar)}</text><text x="12" y={(plotTop + plotBottom) / 2 + 4} fill="#91a098" fontSize="10">{compactCurrency(maxBar / 2)}</text>{data.map((item, index) => <g key={item.month}><rect x={x(index) - 16} y={yBar(item.receita)} width="32" height={Math.max(0, plotBottom - yBar(item.receita))} rx="7" fill="#cfe5d9" /><text x={x(index)} y={item.receita === 0 ? plotBottom - 8 : yBar(item.receita) - 8} textAnchor="middle" fill="#297059" fontSize="10" fontWeight="700">{chartLabel(item.receita)}</text><text x={x(index)} y="252" textAnchor="middle" fill="#91a098" fontSize="11">{item.month}</text></g>)}<path d={areaPath("investimentos")} fill="#8fc4a5" fillOpacity="0.2" /><path d={areaPath("gastos")} fill="#e5a59a" fillOpacity="0.16" /><path d={linePath("investimentos")} fill="none" stroke="#3f8b63" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d={linePath("gastos")} fill="none" stroke="#c4685a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />{data.map((item, index) => <g key={`points-${item.month}`}><circle cx={x(index)} cy={yLine(item.investimentos)} r="4" fill="#3f8b63" /><circle cx={x(index)} cy={yLine(item.gastos)} r="4" fill="#c4685a" />{item.investimentos > 0 && <text x={x(index)} y={yLine(item.investimentos) - 8} textAnchor="middle" fill="#3f8b63" fontSize="10" fontWeight="700">{chartLabel(item.investimentos)}</text>}{item.gastos > 0 && <text x={x(index)} y={yLine(item.gastos) + 16} textAnchor="middle" fill="#a55348" fontSize="10" fontWeight="700">{chartLabel(item.gastos)}</text>}</g>)} </svg><div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-[11px] text-[#71847a]"><span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-[3px] bg-[#cfe5d9]" />Receita Total</span><span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#3f8b63]" />Investimentos</span><span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#a85f50]" />Despesas</span></div></div>;

@@ -90,4 +90,12 @@
 - [x] Testar o dashboard com lançamentos anteriores ao fallback e com lista vazia
 - [x] Validar visualmente o checkpoint publicado 0ef2d8c7 no preview e confirmar o período e as séries reais do Ritmo Financeiro
 - [x] Ajustar a renderização do Ritmo Financeiro para manter barras, linhas, áreas e rótulos visíveis quando os valores tiverem magnitudes diferentes
-- [ ] Publicar o gráfico Ritmo Financeiro corrigido com renderização determinística e dados reais
+- [x] Publicar o gráfico Ritmo Financeiro corrigido com renderização determinística e dados reais
+- [x] Usar a mesma escala vertical para barras, linha de Investimentos e linha de Despesas no Ritmo Financeiro
+- [x] Testar e validar visualmente o alinhamento numérico das linhas com as barras
+- [ ] Publicar o alinhamento numérico das linhas com as barras em novo checkpoint
+- [x] Adicionar teste automatizado confirmando que linhas e barras usam a mesma conversão vertical para o mesmo valor
+- [x] Revalidar visualmente o alinhamento após a cobertura específica
+- [x] Tornar o teste de escala não tautológico, comparando explicitamente as conversões usadas por barras e linhas
+- [x] Registrar evidência automatizada adicional do alinhamento no SVG antes de publicar
+- [x] Renderizar o FinancialRhythmChart em teste e verificar no SVG que a barra e o ponto da linha para o mesmo valor têm a mesma coordenada Y

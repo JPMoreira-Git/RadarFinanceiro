@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
-import { buildInvestmentExpenseWaterfall, DashboardView, NewTransaction, percentageChange } from "./Home";
+import { buildInvestmentExpenseWaterfall, DashboardView, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, NewTransaction, percentageChange } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -30,6 +30,22 @@ describe("InvestmentExpenseWaterfall", () => {
 });
 
 describe("DashboardView", () => {
+  it("mantém barra e ponto da linha na mesma coordenada Y no SVG renderizado", () => {
+    const { container } = render(<FinancialRhythmChart data={[{ month: "jul", receita: 3020, investimentos: 3020, gastos: 0 }]} />);
+    const bar = container.querySelector("rect");
+    const investmentPoint = container.querySelector("circle");
+    expect(bar?.getAttribute("y")).toBe(investmentPoint?.getAttribute("cy"));
+  });
+
+  it("usa a mesma escala vertical para barras e linhas do Ritmo Financeiro", () => {
+    const barY = financialChartBarY(3020, 10840);
+    const lineY = financialChartLineY(3020, 10840);
+    expect(lineY).toBe(barY);
+    expect(financialChartY(3020, 10840)).toBe(barY);
+    expect(financialChartBarY(10840, 10840)).toBe(24);
+    expect(financialChartY(0, 10840)).toBe(228);
+  });
+
   it("calcula a evolução percentual das despesas contra o mês anterior", () => {
     expect(Number(percentageChange(966.1, 3020)?.toFixed(1))).toBe(-68);
     expect(percentageChange(100, 0)).toBeNull();
