@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
-import { buildInvestmentExpenseWaterfall, DashboardView, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
+import { buildInvestmentExpenseWaterfall, DashboardView, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -23,6 +23,11 @@ function DashboardHarness({ transactions }: { transactions: React.ComponentProps
 }
 
 describe("InvestmentExpenseWaterfall", () => {
+  it("posiciona saldos positivos acima e negativos abaixo da linha central", () => {
+    expect(divergingBarY(673.9, 1440)).toBeLessThan(82);
+    expect(divergingBarY(-1440, 1440)).toBeGreaterThan(82);
+    expect(divergingBarY(0, 1440)).toBe(82);
+  });
   it("calcula o saldo mensal e a soma acumulada depois de agosto", () => {
     const steps = buildInvestmentExpenseWaterfall([
       { id: 1, date: "2026-01-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },

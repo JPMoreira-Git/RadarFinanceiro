@@ -110,6 +110,11 @@
 - [x] Publicar novo checkpoint com a correção dos seletores de mês
 - [x] Posicionar os rótulos de Investimentos e Despesas acima ou abaixo do marcador conforme a posição relativa das linhas
 - [x] Adicionar teste de posicionamento e validar visualmente a correção
-- [ ] Publicar a correção de posicionamento em novo checkpoint
+- [x] Publicar a correção de posicionamento em novo checkpoint
 - [x] Adicionar teste do SVG renderizado verificando os rótulos acima/abaixo dos respectivos marcadores
 - [x] Validar o posicionamento dos rótulos por teste automatizado do SVG renderizado nos dois cenários de sobreposição
+- [x] Substituir Investimentos x Despesas por colunas divergentes de saldo mensal, com positivos acima e negativos abaixo da linha central
+- [x] Remover a barra final Acumulado do primeiro gráfico e manter o acumulado somente na linha abaixo
+- [x] Atualizar testes e validar geometricamente a nova visualização com teste automatizado e captura do preview
+- [ ] Publicar a nova visualização em novo checkpoint
+- [x] Adicionar teste determinístico confirmando que saldos positivos ficam acima e negativos abaixo da linha central
