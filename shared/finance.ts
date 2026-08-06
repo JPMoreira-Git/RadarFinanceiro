@@ -83,13 +83,22 @@ export function filterTransactions<T extends { date: string; category: string; r
   );
 }
 
+const normalizeText = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+export function isInvestmentIncome(subcategory: string) {
+  const normalized = normalizeText(subcategory);
+  return normalized.includes("rendimento") && normalized.includes("invest")
+    || normalized === "rendimentos"
+    || normalized === "rendimento";
+}
+
 export function aggregateMonthly<T extends { date: string; type: "receita" | "despesa"; amount: number; subcategory: string }>(transactions: T[], months: readonly (readonly [string, string])[]) {
   return months.map(([key, month]) => {
     const entries = transactions.filter((item) => item.date.startsWith(key));
     return {
       month,
       receita: entries.filter((item) => item.type === "receita").reduce((sum, item) => sum + item.amount, 0),
-      investimentos: entries.filter((item) => item.subcategory === "Rendimento de investimentos").reduce((sum, item) => sum + item.amount, 0),
+      investimentos: entries.filter((item) => item.type === "receita" && isInvestmentIncome(item.subcategory)).reduce((sum, item) => sum + item.amount, 0),
       gastos: entries.filter((item) => item.type === "despesa").reduce((sum, item) => sum + item.amount, 0),
     };
   });
@@ -146,7 +155,7 @@ export function summarizeTransactions(transactions: FinanceTransaction[]) {
     .filter((item) => item.type === "despesa")
     .reduce((sum, item) => sum + item.amount, 0);
   const investimentos = transactions
-    .filter((item) => item.subcategory === "Rendimento de investimentos")
+    .filter((item) => item.type === "receita" && isInvestmentIncome(item.subcategory))
     .reduce((sum, item) => sum + item.amount, 0);
 
   return {

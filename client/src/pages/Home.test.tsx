@@ -42,6 +42,24 @@ describe("DashboardView", () => {
     ]} />);
     expect(screen.getByText("−68,0% em relação a julho")).toBeInTheDocument();
   });
+
+  it("usa o mês mais recente dos lançamentos como referência do dashboard", () => {
+    render(<DashboardView transactions={[
+      { id: 1, date: "2026-09-05", type: "despesa", amount: 120, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" },
+      { id: 2, date: "2026-08-05", type: "despesa", amount: 300, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    expect(screen.getByText("setembro 2026")).toBeInTheDocument();
+    expect(screen.getByText("−60,0% em relação a agosto")).toBeInTheDocument();
+  });
+
+  it("não ancora o dashboard em agosto quando os lançamentos mais recentes são anteriores", () => {
+    render(<DashboardView transactions={[{ id: 1, date: "2026-06-05", type: "despesa", amount: 120, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" }]} />);
+    expect(screen.getByText("junho 2026")).toBeInTheDocument();
+  });
+
+  it("renderiza um estado vazio sem lançar erro quando não há lançamentos", () => {
+    expect(() => render(<DashboardView transactions={[]} />)).not.toThrow();
+  });
 });
 
 describe("NewTransaction", () => {

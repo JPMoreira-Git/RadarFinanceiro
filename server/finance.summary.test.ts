@@ -69,6 +69,15 @@ describe("filters and monthly aggregation", () => {
     ], [["2026-08", "Ago"]] as const);
     expect(series).toEqual([{ month: "Ago", receita: 250, investimentos: 250, gastos: 100 }]);
   });
+
+  it("keeps investment income tied to real receipt entries even when the label varies", () => {
+    const series = aggregateMonthly([
+      { date: "2026-09-06", type: "receita" as const, amount: 300, subcategory: "Rendimentos de Investimentos" },
+      { date: "2026-09-07", type: "despesa" as const, amount: 120, subcategory: "Supermercado" },
+      { date: "2026-09-08", type: "despesa" as const, amount: 40, subcategory: "Rendimento de investimentos" },
+    ], [["2026-09", "Set"]] as const);
+    expect(series).toEqual([{ month: "Set", receita: 300, investimentos: 300, gastos: 160 }]);
+  });
 });
 
 describe("transaction deletion scope", () => {

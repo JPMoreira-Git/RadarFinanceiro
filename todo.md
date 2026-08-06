@@ -81,4 +81,10 @@
 - [x] Remover o título Primeiro cenário e renomear o primeiro gráfico para Investimentos x Despesas
 - [x] Calcular mês a mês o saldo de investimentos menos despesas e exibir acumulado após agosto
 - [x] Adicionar testes e validar visualmente a nova cascata mensal
-- [ ] Publicar um novo checkpoint com a nova cascata mensal
+- [x] Publicar um novo checkpoint com a nova cascata mensal
+- [x] Auditar por que o gráfico Ritmo Financeiro não está refletindo corretamente os lançamentos salvos
+- [x] Corrigir a agregação das séries Receita Total, Investimentos e Despesas para usar os lançamentos reais
+- [x] Adicionar testes de consistência e validar a lógica da correção
+- [ ] Validar visualmente a correção publicada e publicar um novo checkpoint
+- [x] Corrigir o mês de referência para não usar fallback fixo quando os lançamentos forem anteriores a agosto de 2026
+- [x] Testar o dashboard com lançamentos anteriores ao fallback e com lista vazia
