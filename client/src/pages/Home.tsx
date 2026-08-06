@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { summarizeTransactions } from "@shared/finance";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import {
   Area,
   Bar,
@@ -155,9 +156,9 @@ function MobileNav({ location, setLocation }: { location: string; setLocation: (
 
 export default function Home() {
   const [location, setLocation] = useLocation();
-  const [transactions, setTransactions] = useState(seedTransactions);
-  const [categoriesData, setCategoriesData] = useState<Record<string, string[]>>({ ...categories });
-  const [payments, setPayments] = useState(["Conta conjunta", "Cartão principal", "Conta investimentos", "Débito automático"]);
+  const [transactions, setTransactions] = usePersistentState<Transaction[]>("fluxo:transactions", seedTransactions);
+  const [categoriesData, setCategoriesData] = usePersistentState<Record<string, string[]>>("fluxo:categories", { ...categories });
+  const [payments, setPayments] = usePersistentState<string[]>("fluxo:payments", ["Conta conjunta", "Cartão principal", "Conta investimentos", "Débito automático"]);
   const addTransaction = (transaction: Transaction) => setTransactions((current) => [transaction, ...current]);
   const addCategory = (name: string) => setCategoriesData((current) => current[name] ? current : { ...current, [name]: ["Geral"] });
   const addSubcategory = (category: string, subcategory: string) => setCategoriesData((current) => ({ ...current, [category]: current[category]?.includes(subcategory) ? current[category] : [...(current[category] ?? []), subcategory] }));

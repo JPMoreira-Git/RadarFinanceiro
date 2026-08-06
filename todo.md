@@ -12,7 +12,7 @@
 - [x] Implementar gráfico combinado de receitas, rendimentos de investimentos e gastos
 - [x] Implementar waterfall de rendimentos de investimentos versus saídas
 - [x] Implementar waterfall de investimentos mais salário versus saídas
-- [ ] Criar modelos de dados e camada de persistência para transações e configurações
+- [x] Criar modelos de dados e camada de persistência para transações e configurações
 - [x] Escrever ou atualizar testes Vitest para as funcionalidades implementadas
 - [x] Verificar responsividade mobile e desktop, estados vazios, validações e interações
 - [x] Implementar filtros reais de lançamentos por mês e responsável, além do filtro por categoria já existente
