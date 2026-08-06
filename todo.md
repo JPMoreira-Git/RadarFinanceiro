@@ -23,3 +23,16 @@
 - [x] Conectar categorias e formas de pagamento configuradas ao formulário de novo lançamento e à listagem
 - [x] Implementar gerenciamento real de subcategorias nas configurações, com adição e remoção
 - [x] Conectar as formas de pagamento configuradas também à tela de listagem e edição de lançamentos, substituindo opções fixas
+- [x] Filtrar categorias e subcategorias conforme o tipo receita ou despesa e limpar seleções incompatíveis
+- [x] Adicionar campos de parcelamento para compras no cartão, usando a data informada como primeira parcela
+- [x] Gerar automaticamente uma transação por parcela nos meses correspondentes, dividindo o valor com ajuste de centavos
+- [x] Exibir o agrupamento de parcelas na listagem e preservar a edição/exclusão do conjunto parcelado
+- [x] Atualizar testes e indicadores para validar lançamentos parcelados
+- [x] Implementar agrupamento visual de compras parceladas na listagem, com ações de editar/excluir aplicáveis ao grupo inteiro ou à parcela individual de forma explícita
+- [x] Atualizar a lógica dos indicadores e gráficos mensais para derivar os valores das transações parceladas geradas, em vez de depender de dados estáticos
+- [x] Adicionar testes cobrindo lançamentos parcelados refletindo corretamente resumo, filtros e indicadores mensais
+- [x] Implementar na listagem de parcelados ações explícitas para editar ou excluir apenas a parcela selecionada ou o grupo inteiro
+- [x] Adicionar testes cobrindo filtros de lançamentos parcelados por mês, categoria e responsável
+- [x] Adicionar teste para a agregação mensal usada pelos indicadores e gráficos
+- [x] Implementar na listagem de parcelados ações explícitas de exclusão para escolher entre remover apenas a parcela atual ou o grupo inteiro, com UI e comportamento diferenciados
+- [x] Adicionar teste cobrindo exclusão de parcela individual versus exclusão do grupo parcelado
