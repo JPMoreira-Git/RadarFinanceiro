@@ -66,4 +66,4 @@
 - [x] Adicionar teste automatizado específico do campo de parcelas para apagar o valor e digitar 2 sem virar 12
 - [x] Validar por interação ou evidência visual o fluxo corrigido do campo antes do checkpoint
 - [x] Adicionar teste de interação do formulário Novo lançamento cobrindo apagar o campo, digitar 2 e confirmar que o valor exibido é 2
-- [ ] Validar explicitamente a tela Novo lançamento após a interação com o campo de parcelas (bloqueado no preview por autenticação OAuth; coberto pelo teste de formulário real)
+- [x] Validar explicitamente a tela Novo lançamento após a interação com o campo de parcelas por teste automatizado da tela real NewTransaction (o preview manual exige sessão OAuth)
