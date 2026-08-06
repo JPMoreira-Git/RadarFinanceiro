@@ -85,6 +85,9 @@
 - [x] Auditar por que o gráfico Ritmo Financeiro não está refletindo corretamente os lançamentos salvos
 - [x] Corrigir a agregação das séries Receita Total, Investimentos e Despesas para usar os lançamentos reais
 - [x] Adicionar testes de consistência e validar a lógica da correção
-- [ ] Validar visualmente a correção publicada e publicar um novo checkpoint
+- [x] Validar visualmente a correção publicada e publicar um novo checkpoint
 - [x] Corrigir o mês de referência para não usar fallback fixo quando os lançamentos forem anteriores a agosto de 2026
 - [x] Testar o dashboard com lançamentos anteriores ao fallback e com lista vazia
+- [x] Validar visualmente o checkpoint publicado 0ef2d8c7 no preview e confirmar o período e as séries reais do Ritmo Financeiro
+- [x] Ajustar a renderização do Ritmo Financeiro para manter barras, linhas, áreas e rótulos visíveis quando os valores tiverem magnitudes diferentes
+- [ ] Publicar o gráfico Ritmo Financeiro corrigido com renderização determinística e dados reais
