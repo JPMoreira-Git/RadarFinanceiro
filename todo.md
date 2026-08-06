@@ -1,0 +1,25 @@
+# Project TODO
+
+- [x] Implementar autenticação usando o sistema OAuth já disponível no template
+- [x] Criar shell mobile-first com visual elegante, sofisticado e responsivo
+- [x] Implementar bottom navigation para Dashboard, Lançamentos, Novo Lançamento e Configurações
+- [x] Criar formulário de lançamento com data, tipo, valor, categoria, subcategoria, responsável, forma de pagamento e observação
+- [x] Disponibilizar categorias e subcategorias pré-definidas do casal
+- [x] Implementar lista de lançamentos com filtros por mês, categoria e responsável
+- [x] Implementar edição e exclusão individual de lançamentos
+- [x] Implementar tela de configurações para categorias, subcategorias e contas/formas de pagamento
+- [x] Criar dashboard mensal com receitas, despesas, saldo e cobertura por rendimentos de investimentos
+- [x] Implementar gráfico combinado de receitas, rendimentos de investimentos e gastos
+- [x] Implementar waterfall de rendimentos de investimentos versus saídas
+- [x] Implementar waterfall de investimentos mais salário versus saídas
+- [ ] Criar modelos de dados e camada de persistência para transações e configurações
+- [x] Escrever ou atualizar testes Vitest para as funcionalidades implementadas
+- [x] Verificar responsividade mobile e desktop, estados vazios, validações e interações
+- [x] Implementar filtros reais de lançamentos por mês e responsável, além do filtro por categoria já existente
+- [x] Implementar edição real de lançamentos com formulário preenchido, atualização de estado e cancelamento
+- [x] Implementar gerenciamento funcional de categorias, subcategorias e formas de pagamento
+- [x] Substituir os pseudo-waterfalls por gráficos waterfall reais com lógica cumulativa, conectores e rótulos de resultado
+- [x] Integrar e evidenciar o fluxo real de autenticação OAuth do template na UI, com estado autenticado e não autenticado
+- [x] Conectar categorias e formas de pagamento configuradas ao formulário de novo lançamento e à listagem
+- [x] Implementar gerenciamento real de subcategorias nas configurações, com adição e remoção
+- [x] Conectar as formas de pagamento configuradas também à tela de listagem e edição de lançamentos, substituindo opções fixas

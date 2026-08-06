@@ -1,33 +1,171 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { useLocation } from "wouter";
+import { summarizeTransactions } from "@shared/finance";
+import {
+  Area,
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Ellipsis,
+  Filter,
+  ListFilter,
+  Pencil,
+  Plus,
+  ReceiptText,
+  Settings2,
+  Sparkles,
+  Trash2,
+  TrendingUp,
+  Wallet,
+  X,
+} from "lucide-react";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+type TransactionType = "receita" | "despesa";
+type Transaction = {
+  id: number;
+  date: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  subcategory: string;
+  responsible: string;
+  payment: string;
+  note: string;
+};
+
+const categories: Record<string, string[]> = {
+  Moradia: ["Aluguel", "Condomínio", "IPTU", "Manutenção"],
+  Transporte: ["Combustível", "Seguro", "Manutenção", "Transporte público"],
+  Alimentação: ["Supermercado", "Restaurante", "Delivery"],
+  "Saúde e Bem-estar": ["Plano de saúde", "Farmácia", "Academia", "Consultas"],
+  Lazer: ["Viagens", "Entretenimento", "Assinaturas"],
+  "Ajuda Familiar": ["Pais", "Sogros"],
+  Investimentos: ["Aporte", "Resgate"],
+  Receitas: ["Salário", "Rendimento de investimentos", "Outros"],
+};
+
+const seedTransactions: Transaction[] = [
+  { id: 1, date: "2026-08-05", type: "despesa", amount: 482.7, category: "Alimentação", subcategory: "Supermercado", responsible: "Você", payment: "Cartão principal", note: "Compras da semana" },
+  { id: 2, date: "2026-08-04", type: "receita", amount: 1640, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "Você", payment: "Conta investimentos", note: "Rendimento mensal" },
+  { id: 3, date: "2026-08-03", type: "despesa", amount: 285.9, category: "Moradia", subcategory: "Condomínio", responsible: "Esposa", payment: "Débito automático", note: "" },
+  { id: 4, date: "2026-08-02", type: "despesa", amount: 197.5, category: "Saúde e Bem-estar", subcategory: "Academia", responsible: "Esposa", payment: "Cartão principal", note: "Mensalidade" },
+  { id: 5, date: "2026-08-01", type: "receita", amount: 9200, category: "Receitas", subcategory: "Salário", responsible: "Esposa", payment: "Conta conjunta", note: "Salário mensal" },
+  { id: 6, date: "2026-07-28", type: "despesa", amount: 620, category: "Transporte", subcategory: "Combustível", responsible: "Você", payment: "Cartão principal", note: "" },
+  { id: 7, date: "2026-07-25", type: "receita", amount: 8900, category: "Receitas", subcategory: "Salário", responsible: "Você", payment: "Conta conjunta", note: "Salário mensal" },
+  { id: 8, date: "2026-07-20", type: "despesa", amount: 2400, category: "Moradia", subcategory: "Aluguel", responsible: "Você", payment: "Conta conjunta", note: "" },
+  { id: 9, date: "2026-07-15", type: "receita", amount: 1580, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "Você", payment: "Conta investimentos", note: "Rendimento mensal" },
+];
+
+const monthlyData = [
+  { month: "Mar", receita: 17100, investimentos: 1420, gastos: 11320 },
+  { month: "Abr", receita: 17600, investimentos: 1490, gastos: 12140 },
+  { month: "Mai", receita: 16800, investimentos: 1510, gastos: 10980 },
+  { month: "Jun", receita: 18100, investimentos: 1570, gastos: 12680 },
+  { month: "Jul", receita: 17800, investimentos: 1580, gastos: 11800 },
+  { month: "Ago", receita: 18040, investimentos: 1640, gastos: 967 },
+];
+
+const currency = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const dateLabel = (value: string) => new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(" de ", "/");
+
+function StatCard({ label, value, detail, tone, icon: Icon }: { label: string; value: string; detail: string; tone: "green" | "sand" | "rose" | "blue"; icon: typeof Wallet }) {
+  const tones = {
+    green: "bg-[#e6f1eb] text-[#1b5b49]",
+    sand: "bg-[#f5ecdf] text-[#98633c]",
+    rose: "bg-[#f8e8e5] text-[#a55348]",
+    blue: "bg-[#e8eff2] text-[#376273]",
+  };
+  return <Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardContent className="p-4 sm:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b9c94]">{label}</p><p className="mt-2 font-display text-xl font-semibold tracking-tight text-[#173f35] sm:text-2xl">{value}</p></div><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tones[tone]}`}><Icon className="h-4 w-4" /></div></div><p className="mt-3 text-xs text-[#81918a]">{detail}</p></CardContent></Card>;
+}
+
+function SectionHeading({ eyebrow, title, action }: { eyebrow?: string; title: string; action?: React.ReactNode }) {
+  return <div className="mb-4 flex items-end justify-between gap-4"><div>{eyebrow && <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.19em] text-[#a16d45]">{eyebrow}</p>}<h2 className="font-display text-xl font-semibold tracking-tight text-[#173f35]">{title}</h2></div>{action}</div>;
+}
+
+function DashboardView({ transactions }: { transactions: Transaction[] }) {
+  const monthTransactions = transactions.filter((item) => item.date.startsWith("2026-08"));
+  const { receita, despesas, investimentos, cobertura: coverage } = summarizeTransactions(monthTransactions);
+  const recent = transactions.slice(0, 4);
+
+  return <div className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8"><div className="mb-7 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#a16d45]">Agosto 2026</p><h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[#173f35] sm:text-4xl">Visão geral do mês</h1><p className="mt-2 max-w-xl text-sm leading-6 text-[#77877f]">Acompanhe o fluxo da família e veja se os rendimentos já cobrem o custo de viver bem.</p></div><div className="flex items-center gap-2"><Button variant="outline" className="h-10 rounded-xl border-[#d7e1db] bg-white text-[#557067] hover:bg-[#f0f5f2]"><ChevronLeft className="mr-1 h-4 w-4" />Julho</Button><Button variant="outline" className="h-10 rounded-xl border-[#d7e1db] bg-white text-[#557067] hover:bg-[#f0f5f2]">Agosto<ChevronRight className="ml-1 h-4 w-4" /></Button></div></div><div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"><StatCard label="Receitas" value={currency(receita)} detail="+4,8% em relação a julho" tone="green" icon={ArrowUpRight} /><StatCard label="Despesas" value={currency(despesas)} detail="12 lançamentos no período" tone="rose" icon={ArrowDownRight} /><StatCard label="Saldo do mês" value={currency(receita - despesas)} detail="Disponível após as saídas" tone="sand" icon={CircleDollarSign} /><StatCard label="Cobertura" value={`${coverage.toFixed(0)}%`} detail="Rendimentos vs. despesas" tone="blue" icon={TrendingUp} /></div><div className="mt-6 grid gap-5 xl:grid-cols-[1.45fr_0.55fr]"><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardHeader className="border-b border-[#edf1ee] p-5 pb-4 sm:p-6 sm:pb-4"><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a16d45]">Ritmo financeiro</p><CardTitle className="mt-1 font-display text-xl text-[#173f35]">Receitas, investimentos e gastos</CardTitle></div><div className="flex items-center gap-2 rounded-xl bg-[#f5f8f5] px-3 py-2 text-xs text-[#71847a]"><span className="h-2 w-2 rounded-full bg-[#a16d45]" /> Atualizado agora</div></div></CardHeader><CardContent className="p-3 pt-5 sm:p-6"><div className="h-[270px] w-full"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={monthlyData} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}><CartesianGrid vertical={false} stroke="#edf1ee" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#91a098", fontSize: 11 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#91a098", fontSize: 10 }} tickFormatter={(value) => `${value / 1000}k`} /><Tooltip formatter={(value: number) => currency(value)} contentStyle={{ borderRadius: 14, border: "1px solid #dfe9e2", boxShadow: "0 10px 30px rgba(23,63,53,0.1)", fontSize: 12 }} /><Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 16 }} /><Bar dataKey="receita" name="Receita total" barSize={28} fill="#dcece3" radius={[7, 7, 0, 0]} /><Line type="monotone" dataKey="investimentos" name="Rendimentos" stroke="#a16d45" strokeWidth={2.5} dot={{ r: 3, fill: "#a16d45", strokeWidth: 0 }} /><Line type="monotone" dataKey="gastos" name="Gastos" stroke="#c4685a" strokeWidth={2.5} dot={{ r: 3, fill: "#c4685a", strokeWidth: 0 }} /></ComposedChart></ResponsiveContainer></div></CardContent></Card><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1"><Card className="rounded-2xl border-[#e0e9e3] bg-[#173f35] text-white shadow-[0_12px_35px_rgba(23,63,53,0.13)]"><CardContent className="p-5 sm:p-6"><div className="flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#b9d4c6]">Rendimento</p><p className="mt-2 font-display text-3xl font-semibold">{currency(investimentos)}</p></div><div className="rounded-xl bg-white/10 p-2.5"><Sparkles className="h-5 w-5 text-[#e7c7a7]" /></div></div><div className="mt-6"><div className="mb-2 flex justify-between text-xs text-[#c2d6cb]"><span>Cobertura das despesas</span><span>{coverage.toFixed(0)}%</span></div><div className="h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-[#d6a77b]" style={{ width: `${Math.min(coverage, 100)}%` }} /></div></div><p className="mt-4 text-xs leading-5 text-[#b9d4c6]">Faltam {currency(Math.max(despesas - investimentos, 0))} para os investimentos cobrirem todas as saídas.</p></CardContent></Card><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardContent className="p-5"><div className="mb-4 flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a16d45]">Atividade</p><h3 className="mt-1 font-display text-lg font-semibold text-[#173f35]">Últimos lançamentos</h3></div><ReceiptText className="h-5 w-5 text-[#9a6b43]" /></div><div className="space-y-3">{recent.map((item) => <div key={item.id} className="flex items-center gap-3"><div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.type === "receita" ? "bg-[#e6f1eb] text-[#297059]" : "bg-[#f8e8e5] text-[#a55348]"}`}>{item.type === "receita" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-[#31584b]">{item.subcategory}</p><p className="text-[11px] text-[#96a49d]">{dateLabel(item.date)} · {item.responsible}</p></div><p className={`text-sm font-semibold ${item.type === "receita" ? "text-[#297059]" : "text-[#a55348]"}`}>{item.type === "receita" ? "+" : "−"}{currency(item.amount)}</p></div>)}</div></CardContent></Card></div></div><div className="mt-6 grid gap-5 xl:grid-cols-2"><WaterfallCard title="Investimentos vs. saídas" eyebrow="Primeiro cenário" values={[{ label: "Rendimentos", value: investimentos, tone: "positive" }, { label: "Gastos", value: -despesas, tone: "negative" }, { label: "Resultado", value: investimentos - despesas, tone: investimentos - despesas >= 0 ? "positive" : "negative" }]} /><WaterfallCard title="Investimentos + salário vs. saídas" eyebrow="Segundo cenário" values={[{ label: "Investimentos", value: investimentos, tone: "positive" }, { label: "Salário", value: 9200, tone: "positive" }, { label: "Gastos", value: -despesas, tone: "negative" }, { label: "Resultado", value: investimentos + 9200 - despesas, tone: "positive" }]} /></div></div>;
+}
+
+function WaterfallCard({ title, eyebrow, values }: { title: string; eyebrow: string; values: { label: string; value: number; tone: "positive" | "negative" }[] }) {
+  let cumulative = 0;
+  const steps = values.map((item) => { const start = cumulative; cumulative += item.value; return { ...item, start, end: cumulative }; });
+  const max = Math.max(...steps.flatMap((item) => [Math.abs(item.start), Math.abs(item.end)]), 1);
+  const scale = (value: number) => 132 - ((value + max) / (max * 2)) * 116;
+  return <Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardHeader className="p-5 pb-2"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a16d45]">{eyebrow}</p><CardTitle className="mt-1 font-display text-lg text-[#173f35]">{title}</CardTitle></CardHeader><CardContent className="p-5 pt-2"><div className="h-48 w-full"><svg viewBox="0 0 620 190" className="h-full w-full" role="img" aria-label={title}><line x1="18" x2="602" y1={scale(0)} y2={scale(0)} stroke="#dfe9e2" strokeDasharray="4 5" />{steps.map((item, index) => { const x = 42 + index * (540 / steps.length); const top = scale(Math.max(item.start, item.end)); const bottom = scale(Math.min(item.start, item.end)); const height = Math.max(12, bottom - top); return <g key={item.label}><rect x={x} y={top} width={76} height={height} rx={9} fill={item.tone === "positive" ? "#b7d9c5" : "#edbcb5"} /><text x={x + 38} y={top - 8} textAnchor="middle" fontSize="11" fontWeight="700" fill={item.tone === "positive" ? "#297059" : "#a55348"}>{item.value >= 0 ? "+" : "−"}{currency(Math.abs(item.value))}</text><text x={x + 38} y="170" textAnchor="middle" fontSize="10" fill="#788a81">{item.label}</text>{index < steps.length - 1 && <line x1={x + 76} x2={x + 540 / steps.length} y1={scale(item.end)} y2={scale(item.end)} stroke="#b8c9bf" strokeDasharray="3 4" />}</g>; })}</svg></div><div className="mt-2 flex items-center justify-between rounded-xl bg-[#f5f8f5] px-3 py-2"><span className="text-xs font-semibold text-[#788a81]">Resultado acumulado</span><span className={`text-sm font-bold ${cumulative >= 0 ? "text-[#297059]" : "text-[#a55348]"}`}>{cumulative >= 0 ? "+" : "−"}{currency(Math.abs(cumulative))}</span></div></CardContent></Card>;
+}
+
+function NewTransaction({ onAdd, categoriesData, payments }: { onAdd: (transaction: Transaction) => void; categoriesData: Record<string, string[]>; payments: string[] }) {
+  const [form, setForm] = useState({ date: "2026-08-06", type: "despesa" as TransactionType, amount: "", category: "Moradia", subcategory: "Aluguel", responsible: "Você", payment: "Conta conjunta", note: "" });
+  const update = (key: string, value: string) => setForm((current) => ({ ...current, [key]: value, ...(key === "category" ? { subcategory: categoriesData[value][0] } : {}) }));
+  const submit = (event: React.FormEvent) => { event.preventDefault(); const amount = Number(form.amount.replace(",", ".")); if (!amount || amount <= 0) { toast.error("Informe um valor válido para o lançamento."); return; } onAdd({ id: Date.now(), date: form.date, type: form.type, amount, category: form.category, subcategory: form.subcategory, responsible: form.responsible, payment: form.payment, note: form.note }); toast.success("Lançamento adicionado ao resumo."); setForm((current) => ({ ...current, amount: "", note: "" })); };
+  return <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:py-8"><div className="mb-7"><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#a16d45]">Novo registro</p><h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[#173f35]">O que aconteceu hoje?</h1><p className="mt-2 text-sm text-[#77877f]">Registre uma entrada ou saída para manter o fluxo da família atualizado.</p></div><form onSubmit={submit} className="space-y-5"><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardContent className="space-y-5 p-5 sm:p-7"><div><p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-[#71847a]">Tipo de lançamento</p><div className="grid grid-cols-2 gap-3"><button type="button" onClick={() => update("type", "despesa")} className={`rounded-xl border p-4 text-left transition-all ${form.type === "despesa" ? "border-[#c4685a] bg-[#fcf0ee] text-[#a55348]" : "border-[#e0e9e3] bg-white text-[#82918a]"}`}><ArrowDownRight className="mb-3 h-5 w-5" /><p className="text-sm font-semibold">Despesa</p><p className="mt-1 text-xs opacity-70">Algo que saiu</p></button><button type="button" onClick={() => update("type", "receita")} className={`rounded-xl border p-4 text-left transition-all ${form.type === "receita" ? "border-[#73a88e] bg-[#edf6f0] text-[#297059]" : "border-[#e0e9e3] bg-white text-[#82918a]"}`}><ArrowUpRight className="mb-3 h-5 w-5" /><p className="text-sm font-semibold">Receita</p><p className="mt-1 text-xs opacity-70">Algo que entrou</p></button></div></div><div className="grid gap-4 sm:grid-cols-2"><Field label="Valor"><Input value={form.amount} onChange={(event) => update("amount", event.target.value)} inputMode="decimal" placeholder="0,00" className="h-12 rounded-xl border-[#dfe9e2] bg-[#fbfcfb] text-lg font-semibold text-[#173f35]" /></Field><Field label="Data"><Input type="date" value={form.date} onChange={(event) => update("date", event.target.value)} className="h-12 rounded-xl border-[#dfe9e2] bg-[#fbfcfb] text-[#31584b]" /></Field><Field label="Categoria"><select value={form.category} onChange={(event) => update("category", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]">{Object.keys(categoriesData).map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="Subcategoria"><select value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]">{categoriesData[form.category].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="Responsável"><select value={form.responsible} onChange={(event) => update("responsible", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]"><option>Você</option><option>Esposa</option><option>Ambos</option></select></Field><Field label="Forma de pagamento"><select value={form.payment} onChange={(event) => update("payment", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]">{payments.map((item) => <option key={item}>{item}</option>)}</select></Field></div><Field label="Observação"><textarea value={form.note} onChange={(event) => update("note", event.target.value)} placeholder="Adicione um contexto, se quiser..." className="min-h-24 w-full resize-none rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 py-3 text-sm text-[#31584b] outline-none placeholder:text-[#a6b1ab] focus:border-[#9a6b43]" /></Field></CardContent></Card><Button type="submit" className="h-12 w-full rounded-xl bg-[#173f35] font-semibold text-white shadow-lg shadow-[#173f35]/15 hover:bg-[#235b4c]"><Plus className="mr-2 h-4 w-4" />Salvar lançamento</Button></form></div>;
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-semibold text-[#71847a]">{label}</span>{children}</label>; }
+
+function TransactionsView({ transactions, onDelete, onUpdate, categoriesData, payments }: { transactions: Transaction[]; onDelete: (id: number) => void; onUpdate: (transaction: Transaction) => void; categoriesData: Record<string, string[]>; payments: string[] }) {
+  const [filter, setFilter] = useState("Todos");
+  const [responsible, setResponsible] = useState("Todos");
+  const [payment, setPayment] = useState("Todos");
+  const [month, setMonth] = useState("2026-08");
+  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editPayment, setEditPayment] = useState("");
+  const filtered = transactions.filter((item) => item.date.startsWith(month) && (filter === "Todos" || item.category === filter) && (responsible === "Todos" || item.responsible === responsible) && (payment === "Todos" || item.payment === payment) && `${item.category} ${item.subcategory} ${item.note}`.toLowerCase().includes(search.toLowerCase()));
+  const beginEdit = (item: Transaction) => { setEditingId(item.id); setEditAmount(String(item.amount).replace(".", ",")); setEditNote(item.note); setEditPayment(item.payment); };
+  const saveEdit = (item: Transaction) => { const amount = Number(editAmount.replace(",", ".")); if (!amount || amount <= 0) { toast.error("Informe um valor válido."); return; } onUpdate({ ...item, amount, note: editNote, payment: editPayment }); setEditingId(null); toast.success("Lançamento atualizado."); };
+  return <div className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6 lg:py-8"><div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#a16d45]">Histórico</p><h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[#173f35]">Lançamentos</h1><p className="mt-2 text-sm text-[#77877f]">{filtered.length} registros encontrados no período selecionado.</p></div><Button className="h-11 rounded-xl bg-[#173f35] text-white hover:bg-[#235b4c]"><Plus className="mr-2 h-4 w-4" />Novo lançamento</Button></div><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardContent className="p-4 sm:p-6"><div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div className="relative sm:col-span-2 lg:col-span-1"><ListFilter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa9a2]" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar..." className="h-11 rounded-xl border-[#dfe9e2] pl-9" /></div><select value={month} onChange={(event) => setMonth(event.target.value)} className="h-11 rounded-xl border border-[#dfe9e2] bg-white px-3 text-sm text-[#557067]"><option value="2026-08">Agosto 2026</option><option value="2026-07">Julho 2026</option></select><select value={filter} onChange={(event) => setFilter(event.target.value)} className="h-11 rounded-xl border border-[#dfe9e2] bg-white px-3 text-sm text-[#557067]"><option>Todos</option>{Object.keys(categoriesData).map((item) => <option key={item}>{item}</option>)}</select><select value={responsible} onChange={(event) => setResponsible(event.target.value)} className="h-11 rounded-xl border border-[#dfe9e2] bg-white px-3 text-sm text-[#557067]"><option>Todos</option><option>Você</option><option>Esposa</option><option>Ambos</option></select><select value={payment} onChange={(event) => setPayment(event.target.value)} className="h-11 rounded-xl border border-[#dfe9e2] bg-white px-3 text-sm text-[#557067]"><option>Todos</option>{payments.map((option) => <option key={option}>{option}</option>)}</select></div><div className="space-y-2">{filtered.map((item) => editingId === item.id ? <div key={item.id} className="rounded-xl border border-[#cbdad1] bg-[#f7faf8] p-3"><div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"><Field label="Valor"><Input value={editAmount} onChange={(event) => setEditAmount(event.target.value)} inputMode="decimal" className="h-10 rounded-lg border-[#dfe9e2] bg-white" /></Field><Field label="Forma de pagamento"><select value={editPayment} onChange={(event) => setEditPayment(event.target.value)} className="h-10 rounded-lg border border-[#dfe9e2] bg-white px-3 text-sm text-[#31584b]">{payments.map((option) => <option key={option}>{option}</option>)}</select></Field><Field label="Observação"><Input value={editNote} onChange={(event) => setEditNote(event.target.value)} className="h-10 rounded-lg border-[#dfe9e2] bg-white" /></Field><div className="flex gap-2"><Button onClick={() => saveEdit(item)} className="h-10 rounded-lg bg-[#173f35] text-white">Salvar</Button><Button onClick={() => setEditingId(null)} variant="outline" className="h-10 rounded-lg border-[#dfe9e2]">Cancelar</Button></div></div></div> : <div key={item.id} className="group flex items-center gap-3 rounded-xl border border-transparent p-3 transition-colors hover:border-[#e0e9e3] hover:bg-[#fbfcfb]"><div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.type === "receita" ? "bg-[#e6f1eb] text-[#297059]" : "bg-[#f8e8e5] text-[#a55348]"}`}>{item.type === "receita" ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}</div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-semibold text-[#31584b]">{item.subcategory}</p><span className="rounded-md bg-[#f1f5f2] px-2 py-0.5 text-[10px] font-semibold text-[#7c8d85]">{item.category}</span></div><p className="mt-1 truncate text-xs text-[#95a39c]">{dateLabel(item.date)} · {item.responsible} · {item.payment}</p></div><p className={`hidden text-sm font-bold sm:block ${item.type === "receita" ? "text-[#297059]" : "text-[#a55348]"}`}>{item.type === "receita" ? "+" : "−"}{currency(item.amount)}</p><div className="flex items-center gap-1"><button onClick={() => beginEdit(item)} className="rounded-lg p-2 text-[#83938b] hover:bg-[#eef4f0] hover:text-[#173f35]" aria-label="Editar"><Pencil className="h-4 w-4" /></button><button onClick={() => onDelete(item.id)} className="rounded-lg p-2 text-[#83938b] hover:bg-[#f8e8e5] hover:text-[#a55348]" aria-label="Excluir"><Trash2 className="h-4 w-4" /></button></div></div>)}{filtered.length === 0 && <div className="py-12 text-center"><ReceiptText className="mx-auto h-8 w-8 text-[#b6c2bc]" /><p className="mt-3 text-sm font-semibold text-[#5a7166]">Nenhum lançamento encontrado</p><p className="mt-1 text-xs text-[#9aa9a2]">Tente mudar os filtros ou a busca.</p></div>}</div></CardContent></Card></div>;
+}
+
+function SettingsView({ categoriesData, onAddCategory, onAddSubcategory, onRemoveSubcategory, payments, onAddPayment, onRemovePayment }: { categoriesData: Record<string, string[]>; onAddCategory: (name: string) => void; onAddSubcategory: (category: string, subcategory: string) => void; onRemoveSubcategory: (category: string, subcategory: string) => void; payments: string[]; onAddPayment: (name: string) => void; onRemovePayment: (name: string) => void }) {
+  const [newCategory, setNewCategory] = useState("");
+  const [newSubcategory, setNewSubcategory] = useState("");
+  const [subcategoryCategory, setSubcategoryCategory] = useState(Object.keys(categoriesData)[0] ?? "");
+  const [newPayment, setNewPayment] = useState("");
+  return <div className="mx-auto max-w-[1000px] px-4 py-5 sm:px-6 lg:py-8"><div className="mb-7"><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#a16d45]">Personalização</p><h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[#173f35]">Configurações</h1><p className="mt-2 text-sm text-[#77877f]">Deixe o Fluxo com a cara da rotina financeira de vocês.</p></div><div className="grid gap-5 lg:grid-cols-2"><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardHeader className="p-5 pb-3"><CardTitle className="flex items-center gap-2 font-display text-lg text-[#173f35]"><Settings2 className="h-5 w-5 text-[#a16d45]" />Categorias e subcategorias</CardTitle></CardHeader><CardContent className="p-5 pt-2"><div className="space-y-2">{Object.entries(categoriesData).map(([category, subs]) => <div key={category} className="rounded-xl bg-[#f7faf8] p-3"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-[#31584b]">{category}</p><span className="text-[10px] font-bold text-[#9aa9a2]">{subs.length} itens</span></div><p className="mt-1 text-xs leading-5 text-[#8b9c94]">{subs.map((sub) => <span key={sub} className="mr-2 inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs text-[#688078]">{sub}<button type="button" onClick={() => onRemoveSubcategory(category, sub)} className="text-[#a55348]" aria-label={`Remover ${sub}`}>×</button></span>)}</p></div>)}</div><div className="mt-4 flex gap-2"><Input value={newCategory} onChange={(event) => setNewCategory(event.target.value)} placeholder="Nova categoria..." className="h-10 rounded-xl border-[#dfe9e2]" /><Button onClick={() => { const value = newCategory.trim(); if (!value) return; onAddCategory(value); setNewCategory(""); toast.success("Categoria adicionada."); }} variant="outline" className="h-10 rounded-xl border-[#dfe9e2]"><Plus className="h-4 w-4" /></Button></div><div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><select value={subcategoryCategory} onChange={(event) => setSubcategoryCategory(event.target.value)} className="h-10 rounded-xl border border-[#dfe9e2] bg-white px-3 text-sm text-[#557067]">{Object.keys(categoriesData).map((item) => <option key={item}>{item}</option>)}</select><Input value={newSubcategory} onChange={(event) => setNewSubcategory(event.target.value)} placeholder="Nova subcategoria..." className="h-10 rounded-xl border-[#dfe9e2]" /><Button onClick={() => { const value = newSubcategory.trim(); if (!value) return; onAddSubcategory(subcategoryCategory, value); setNewSubcategory(""); toast.success("Subcategoria adicionada."); }} variant="outline" className="h-10 rounded-xl border-[#dfe9e2]"><Plus className="h-4 w-4" /></Button></div></CardContent></Card><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardHeader className="p-5 pb-3"><CardTitle className="flex items-center gap-2 font-display text-lg text-[#173f35]"><Wallet className="h-5 w-5 text-[#a16d45]" />Contas e formas de pagamento</CardTitle></CardHeader><CardContent className="space-y-3 p-5 pt-2">{payments.map((payment) => <PaymentRow key={payment} label={payment} detail={payment.includes("Conta") ? "Conta ou carteira" : "Cartão ou recorrência"} onRemove={() => onRemovePayment(payment)} />)}<div className="flex gap-2 pt-2"><Input value={newPayment} onChange={(event) => setNewPayment(event.target.value)} placeholder="Nova conta ou cartão..." className="h-10 rounded-xl border-[#dfe9e2]" /><Button onClick={() => { const value = newPayment.trim(); if (!value) return; onAddPayment(value); setNewPayment(""); toast.success("Forma de pagamento adicionada."); }} variant="outline" className="h-10 rounded-xl border-[#dfe9e2]"><Plus className="h-4 w-4" /></Button></div></CardContent></Card></div></div>;
+}
+
+function PaymentRow({ label, detail, onRemove }: { label: string; detail: string; onRemove: () => void }) { return <div className="flex items-center gap-3 rounded-xl border border-[#edf1ee] p-3"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef5f0] text-[#477763]"><Wallet className="h-4 w-4" /></div><div className="flex-1"><p className="text-sm font-semibold text-[#31584b]">{label}</p><p className="text-xs text-[#9aa9a2]">{detail}</p></div><button type="button" onClick={onRemove} className="rounded-md p-1 text-[#b2beb7] hover:bg-[#f8e8e5] hover:text-[#a55348]" aria-label={`Remover ${label}`}><X className="h-4 w-4" /></button></div>; }
+
+function MobileNav({ location, setLocation }: { location: string; setLocation: (path: string) => void }) { const items = [{ path: "/", label: "Visão geral", icon: BarChart3 }, { path: "/lancamentos", label: "Lançamentos", icon: ReceiptText }, { path: "/novo", label: "Novo", icon: Plus }, { path: "/configuracoes", label: "Ajustes", icon: Settings2 }]; return <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#dfe9e2] bg-white/95 px-2 pb-[max(0.55rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(30,62,48,0.07)] backdrop-blur md:hidden"><div className="mx-auto flex max-w-md items-center justify-around">{items.map((item) => { const active = location === item.path; return <button key={item.path} onClick={() => setLocation(item.path)} className={`relative flex min-w-[62px] flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-[10px] font-semibold transition-colors ${active ? "text-[#173f35]" : "text-[#9aa9a2]"}`}>{active && <span className="absolute -top-2 h-1 w-5 rounded-full bg-[#a16d45]" />}<item.icon className={`h-[18px] w-[18px] ${active ? "text-[#a16d45]" : ""}`} /><span>{item.label}</span></button>; })}</div></nav>; }
+
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
-  );
+  const [location, setLocation] = useLocation();
+  const [transactions, setTransactions] = useState(seedTransactions);
+  const [categoriesData, setCategoriesData] = useState<Record<string, string[]>>({ ...categories });
+  const [payments, setPayments] = useState(["Conta conjunta", "Cartão principal", "Conta investimentos", "Débito automático"]);
+  const addTransaction = (transaction: Transaction) => setTransactions((current) => [transaction, ...current]);
+  const addCategory = (name: string) => setCategoriesData((current) => current[name] ? current : { ...current, [name]: ["Geral"] });
+  const addSubcategory = (category: string, subcategory: string) => setCategoriesData((current) => ({ ...current, [category]: current[category]?.includes(subcategory) ? current[category] : [...(current[category] ?? []), subcategory] }));
+  const removeSubcategory = (category: string, subcategory: string) => setCategoriesData((current) => ({ ...current, [category]: (current[category] ?? []).filter((item) => item !== subcategory) }));
+  const addPayment = (name: string) => setPayments((current) => current.includes(name) ? current : [...current, name]);
+  const removePayment = (name: string) => setPayments((current) => current.filter((item) => item !== name));
+  const updateTransaction = (transaction: Transaction) => setTransactions((current) => current.map((item) => item.id === transaction.id ? transaction : item));
+  const deleteTransaction = (id: number) => { setTransactions((current) => current.filter((item) => item.id !== id)); toast.success("Lançamento removido do protótipo."); };
+  const view = useMemo(() => location === "/lancamentos" ? "transactions" : location === "/novo" ? "new" : location === "/configuracoes" ? "settings" : "dashboard", [location]);
+  return <><div className="min-h-screen">{view === "dashboard" && <DashboardView transactions={transactions} />}{view === "transactions" && <TransactionsView transactions={transactions} onDelete={deleteTransaction} onUpdate={updateTransaction} categoriesData={categoriesData} payments={payments} />}{view === "new" && <NewTransaction onAdd={addTransaction} categoriesData={categoriesData} payments={payments} />}{view === "settings" && <SettingsView categoriesData={categoriesData} onAddCategory={addCategory} onAddSubcategory={addSubcategory} onRemoveSubcategory={removeSubcategory} payments={payments} onAddPayment={addPayment} onRemovePayment={removePayment} />}</div><MobileNav location={location} setLocation={setLocation} /></>;
 }
