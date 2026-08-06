@@ -36,3 +36,18 @@
 - [x] Adicionar teste para a agregação mensal usada pelos indicadores e gráficos
 - [x] Implementar na listagem de parcelados ações explícitas de exclusão para escolher entre remover apenas a parcela atual ou o grupo inteiro, com UI e comportamento diferenciados
 - [x] Adicionar teste cobrindo exclusão de parcela individual versus exclusão do grupo parcelado
+- [ ] Permitir editar o nome de categorias existentes
+- [ ] Permitir editar o nome de subcategorias existentes
+- [ ] Permitir excluir categorias com confirmação e proteção contra perda de histórico
+- [ ] Permitir excluir subcategorias com confirmação e proteção contra perda de histórico
+- [ ] Implementar ordenação manual de categorias por arrastar e soltar
+- [ ] Implementar ordenação manual de subcategorias por arrastar e soltar
+- [ ] Persistir a ordenação e validar responsividade, testes e regressões
+- [x] Exibir claramente o campo de quantidade de parcelas para compras no cartão
+- [x] Considerar quantidade vazia, zero ou inválida como 1 parcela
+- [x] Validar e testar o comportamento do formulário de parcelamento
+- [x] Adicionar teste de integração/UI cobrindo o formulário de parcelamento: exibir o campo apenas para cartão de crédito e registrar 1 parcela quando a quantidade estiver vazia
+- [x] Validar visualmente ou com teste automatizado a submissão do formulário parcelado após a mudança do campo Quantidade de parcelas
+- [x] Extrair a geração de lançamentos do submit do formulário para uma função de domínio testável
+- [x] Testar que o submit com cartão e quantidade vazia gera exatamente uma transação sem grupo parcelado
+- [x] Testar buildInstallmentTransactions com cartão e installments vazio, confirmando uma transação sem metadados de grupo

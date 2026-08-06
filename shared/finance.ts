@@ -4,12 +4,58 @@ export type FinanceTransaction = {
   subcategory: string;
 };
 
+export function shouldShowInstallments(type: "receita" | "despesa", payment: string) {
+  return type === "despesa" && payment.toLowerCase().includes("cartão");
+}
+
+export function normalizeInstallments(value: string | number) {
+  return Math.max(1, Math.min(60, Number(value) || 1));
+}
+
+export type InstallmentTransactionInput = {
+  idSeed: number;
+  date: string;
+  type: "receita" | "despesa";
+  amount: number;
+  category: string;
+  subcategory: string;
+  responsible: string;
+  payment: string;
+  note: string;
+  installments: string | number;
+};
+
+export type InstallmentTransactionOutput = InstallmentTransactionInput & {
+  id: number;
+  date: string;
+  amount: number;
+  installmentGroupId?: string;
+  installmentNumber?: number;
+  installmentCount?: number;
+};
+
 export function splitInstallments(total: number, count: number) {
   const safeCount = Math.max(1, Math.floor(count));
   const cents = Math.round(total * 100);
   const base = Math.floor(cents / safeCount);
   const remainder = cents - base * safeCount;
   return Array.from({ length: safeCount }, (_, index) => (base + (index < remainder ? 1 : 0)) / 100);
+}
+
+export function buildInstallmentTransactions(input: InstallmentTransactionInput): InstallmentTransactionOutput[] {
+  const count = normalizeInstallments(input.installments);
+  const values = splitInstallments(input.amount, count);
+  const groupId = count > 1 ? `parcelado-${input.idSeed}` : undefined;
+  return values.map((amount, index) => ({
+    ...input,
+    id: input.idSeed + index,
+    date: installmentDate(input.date, index),
+    amount,
+    note: count > 1 ? `Parcela ${index + 1}/${count}${input.note ? ` · ${input.note}` : ""}` : input.note,
+    installmentGroupId: groupId,
+    installmentNumber: count > 1 ? index + 1 : undefined,
+    installmentCount: count > 1 ? count : undefined,
+  }));
 }
 
 export function installmentDate(firstDate: string, index: number) {

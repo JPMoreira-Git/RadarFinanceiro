@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateMonthly, filterTransactions, installmentDate, removeTransactionScope, splitInstallments, summarizeTransactions } from "../shared/finance";
+import { aggregateMonthly, buildInstallmentTransactions, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
 
 describe("summarizeTransactions", () => {
   it("calculates income, expenses, balance and investment coverage", () => {
@@ -81,5 +81,49 @@ describe("transaction deletion scope", () => {
   it("removes only the selected installment or the full group", () => {
     expect(removeTransactionScope(group, group[0]!, "item").map((item) => item.id)).toEqual([2, 3]);
     expect(removeTransactionScope(group, group[0]!, "group").map((item) => item.id)).toEqual([3]);
+  });
+});
+
+describe("installment input", () => {
+  it("defaults empty, zero or invalid values to one installment", () => {
+    expect(normalizeInstallments("")).toBe(1);
+    expect(normalizeInstallments("0")).toBe(1);
+    expect(normalizeInstallments("abc")).toBe(1);
+    expect(normalizeInstallments("3")).toBe(3);
+  });
+});
+
+describe("installment form behavior", () => {
+  it("shows installments only for credit-card expenses", () => {
+    expect(shouldShowInstallments("despesa", "Cartão principal")).toBe(true);
+    expect(shouldShowInstallments("receita", "Cartão principal")).toBe(false);
+    expect(shouldShowInstallments("despesa", "Conta conjunta")).toBe(false);
+  });
+
+  it("submits an empty installment field as one installment", () => {
+    expect(normalizeInstallments("")).toBe(1);
+  });
+});
+
+describe("buildInstallmentTransactions", () => {
+  it("creates one plain transaction when a card purchase has no installment count", () => {
+    const created = buildInstallmentTransactions({
+      idSeed: 100,
+      date: "2026-08-06",
+      type: "despesa",
+      amount: 120,
+      category: "Alimentação",
+      subcategory: "Supermercado",
+      responsible: "Você",
+      payment: "Cartão principal",
+      note: "Compra simples",
+      installments: "",
+    });
+
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ amount: 120, date: "2026-08-06" });
+    expect(created[0]?.installmentGroupId).toBeUndefined();
+    expect(created[0]?.installmentNumber).toBeUndefined();
+    expect(created[0]?.installmentCount).toBeUndefined();
   });
 });
