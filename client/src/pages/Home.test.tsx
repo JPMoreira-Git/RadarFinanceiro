@@ -15,6 +15,13 @@ describe("NewTransaction", () => {
     const user = userEvent.setup();
     render(<NewTransaction onAdd={vi.fn()} categoriesData={categories} payments={["Crédito", "Pix", "Débito", "Dinheiro"]} />);
 
+    const responsible = screen.getByRole("combobox", { name: "Responsável" });
+    expect(responsible).toHaveValue("João Paulo");
+    expect(screen.getByRole("option", { name: "João Paulo" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Danieli" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Você" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Esposa" })).not.toBeInTheDocument();
+
     const payment = screen.getByRole("combobox", { name: "Forma de pagamento" });
     await user.selectOptions(payment, "Crédito");
 

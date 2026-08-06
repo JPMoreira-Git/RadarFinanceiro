@@ -67,3 +67,5 @@
 - [x] Validar por interação ou evidência visual o fluxo corrigido do campo antes do checkpoint
 - [x] Adicionar teste de interação do formulário Novo lançamento cobrindo apagar o campo, digitar 2 e confirmar que o valor exibido é 2
 - [x] Validar explicitamente a tela Novo lançamento após a interação com o campo de parcelas por teste automatizado da tela real NewTransaction (o preview manual exige sessão OAuth)
+- [x] Atualizar o campo Responsável de Novo lançamento: Você → João Paulo e Esposa → Danieli
+- [ ] Validar os novos nomes do campo Responsável em teste e publicar a alteração
