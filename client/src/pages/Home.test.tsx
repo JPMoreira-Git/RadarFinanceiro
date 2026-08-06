@@ -17,6 +17,11 @@ const categories = {
   Receitas: ["Salário"],
 };
 
+function DashboardHarness({ transactions }: { transactions: React.ComponentProps<typeof DashboardView>["transactions"] }) {
+  const [month, setMonth] = React.useState("2026-08");
+  return <DashboardView transactions={transactions} selectedMonth={month} onMonthChange={setMonth} />;
+}
+
 describe("InvestmentExpenseWaterfall", () => {
   it("calcula o saldo mensal e a soma acumulada depois de agosto", () => {
     const steps = buildInvestmentExpenseWaterfall([
@@ -57,6 +62,32 @@ describe("DashboardView", () => {
       { id: 2, date: "2026-07-05", type: "despesa", amount: 3020, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getByText("−68,0% em relação a julho")).toBeInTheDocument();
+  });
+
+  it("navega para o mês anterior ao clicar no seletor", async () => {
+    const onMonthChange = vi.fn();
+    const user = userEvent.setup();
+    render(<DashboardView selectedMonth="2026-08" onMonthChange={onMonthChange} transactions={[
+      { id: 1, date: "2026-08-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-07-05", type: "despesa", amount: 50, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    const julyButtons = screen.getAllByRole("button", { name: /Selecionar julho/i });
+    await user.click(julyButtons[julyButtons.length - 1]);
+    expect(onMonthChange).toHaveBeenCalledWith("2026-07");
+  });
+
+  it("atualiza os cards e a atividade ao trocar para julho", async () => {
+    const user = userEvent.setup();
+    render(<DashboardHarness transactions={[
+      { id: 1, date: "2026-08-05", type: "receita", amount: 10840, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-07-25", type: "receita", amount: 10480, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 3, date: "2026-07-20", type: "despesa", amount: 3020, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    expect(screen.getAllByText("R$ 10.840,00").length).toBeGreaterThan(0);
+    const julyButtons = screen.getAllByRole("button", { name: /Selecionar julho/i });
+    await user.click(julyButtons[julyButtons.length - 1]);
+    expect(screen.getAllByText("R$ 10.480,00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Aluguel").length).toBeGreaterThan(0);
   });
 
   it("usa o mês mais recente dos lançamentos como referência do dashboard", () => {

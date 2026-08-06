@@ -93,9 +93,18 @@
 - [x] Publicar o gráfico Ritmo Financeiro corrigido com renderização determinística e dados reais
 - [x] Usar a mesma escala vertical para barras, linha de Investimentos e linha de Despesas no Ritmo Financeiro
 - [x] Testar e validar visualmente o alinhamento numérico das linhas com as barras
-- [ ] Publicar o alinhamento numérico das linhas com as barras em novo checkpoint
+- [x] Publicar o alinhamento numérico das linhas com as barras em novo checkpoint
 - [x] Adicionar teste automatizado confirmando que linhas e barras usam a mesma conversão vertical para o mesmo valor
 - [x] Revalidar visualmente o alinhamento após a cobertura específica
 - [x] Tornar o teste de escala não tautológico, comparando explicitamente as conversões usadas por barras e linhas
 - [x] Registrar evidência automatizada adicional do alinhamento no SVG antes de publicar
 - [x] Renderizar o FinancialRhythmChart em teste e verificar no SVG que a barra e o ponto da linha para o mesmo valor têm a mesma coordenada Y
+- [x] Fazer os seletores de mês da Visão geral alterarem o mês selecionado de fato
+- [x] Atualizar cards, gráficos e lançamentos da Visão geral conforme o mês escolhido
+- [x] Adicionar testes de navegação mensal e validar visualmente a correção
+- [ ] Publicar a correção dos seletores de mês em novo checkpoint
+- [x] Filtrar Últimos lançamentos pelo mês selecionado e mostrar estado vazio quando necessário
+- [x] Fazer a cascata do segundo cenário acompanhar o mês selecionado, mantendo a cascata mensal histórica como visão independente
+- [x] Adicionar teste de UI que clique em julho e verifique mudança real nos cards e na atividade
+- [x] Validar a troca completa por teste automatizado
+- [ ] Publicar novo checkpoint com a correção dos seletores de mês
