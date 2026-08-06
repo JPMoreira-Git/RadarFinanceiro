@@ -68,4 +68,10 @@
 - [x] Adicionar teste de interação do formulário Novo lançamento cobrindo apagar o campo, digitar 2 e confirmar que o valor exibido é 2
 - [x] Validar explicitamente a tela Novo lançamento após a interação com o campo de parcelas por teste automatizado da tela real NewTransaction (o preview manual exige sessão OAuth)
 - [x] Atualizar o campo Responsável de Novo lançamento: Você → João Paulo e Esposa → Danieli
-- [ ] Validar os novos nomes do campo Responsável em teste e publicar a alteração
+- [x] Validar os novos nomes do campo Responsável em teste e publicar a alteração
+- [x] Exibir no card de despesas a evolução percentual comparada ao mês anterior
+- [x] Atualizar o gráfico Ritmo Financeiro com rótulos de dados, áreas sob as linhas e cores semânticas para receitas, investimentos e despesas
+- [x] Remover o subtítulo/legenda textual redundante abaixo do título do Ritmo Financeiro
+- [x] Testar a agregação percentual e validar visualmente a Visão geral antes de publicar
+- [x] Adicionar teste automatizado para o cálculo de variação percentual de despesas entre mês atual e anterior
+- [x] Adicionar teste de UI da Visão geral verificando o detalhe do card de despesas com a porcentagem correta em relação ao mês anterior
