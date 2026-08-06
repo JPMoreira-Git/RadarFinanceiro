@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateMonthly, buildInstallmentTransactions, canDeleteCategory, canDeleteSubcategory, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, renameListItem, renameNamedEntry, reorderListItem, reorderNamedEntries, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
+import { aggregateMonthly, buildInstallmentTransactions, canDeleteCategory, canUseInstallments, canDeleteSubcategory, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, renameListItem, renameNamedEntry, reorderListItem, reorderNamedEntries, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
 
 describe("summarizeTransactions", () => {
   it("calculates income, expenses, balance and investment coverage", () => {
@@ -94,10 +94,12 @@ describe("installment input", () => {
 });
 
 describe("installment form behavior", () => {
-  it("shows installments only for credit-card expenses", () => {
+  it("shows installments for every expense while keeping the field eligibility separate", () => {
     expect(shouldShowInstallments("despesa", "Cartão principal")).toBe(true);
     expect(shouldShowInstallments("receita", "Cartão principal")).toBe(false);
-    expect(shouldShowInstallments("despesa", "Conta conjunta")).toBe(false);
+    expect(shouldShowInstallments("despesa", "Conta conjunta")).toBe(true);
+    expect(canUseInstallments("Cartão principal")).toBe(true);
+    expect(canUseInstallments("Conta conjunta")).toBe(false);
   });
 
   it("submits an empty installment field as one installment", () => {
@@ -154,3 +156,16 @@ describe("category management helpers", () => {
     expect(renameListItem(["Aluguel", "IPTU"], "Aluguel", "Casa")).toEqual(["Casa", "IPTU"]);
     expect(renameListItem(["Aluguel", "IPTU"], "Aluguel", "IPTU")).toEqual(["Aluguel", "IPTU"]);
   });
+
+describe("payment installment eligibility", () => {
+  it("allows credit and Pix while keeping debit and cash at one installment", () => {
+    expect(canUseInstallments("Crédito")).toBe(true);
+    expect(canUseInstallments("Pix")).toBe(true);
+    expect(canUseInstallments("Débito")).toBe(false);
+    expect(canUseInstallments("Dinheiro")).toBe(false);
+    expect(normalizeInstallments(6, "Débito")).toBe(1);
+    expect(normalizeInstallments(6, "Dinheiro")).toBe(1);
+    expect(normalizeInstallments(6, "Pix")).toBe(6);
+    expect(buildInstallmentTransactions({ idSeed: 90, date: "2026-08-10", type: "despesa", amount: 120, category: "Lazer", subcategory: "Viagens", responsible: "Eu", payment: "Pix", note: "Pix parcelado", installments: 3 })).toHaveLength(3);
+  });
+});

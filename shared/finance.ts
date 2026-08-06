@@ -4,11 +4,17 @@ export type FinanceTransaction = {
   subcategory: string;
 };
 
-export function shouldShowInstallments(type: "receita" | "despesa", payment: string) {
-  return type === "despesa" && payment.toLowerCase().includes("cartão");
+export function canUseInstallments(payment: string) {
+  const normalized = payment.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return normalized.includes("cartao") || normalized.includes("credito") || normalized.includes("pix");
 }
 
-export function normalizeInstallments(value: string | number) {
+export function shouldShowInstallments(type: "receita" | "despesa", _payment: string) {
+  return type === "despesa";
+}
+
+export function normalizeInstallments(value: string | number, payment?: string) {
+  if (payment && !canUseInstallments(payment)) return 1;
   return Math.max(1, Math.min(60, Number(value) || 1));
 }
 
@@ -43,7 +49,7 @@ export function splitInstallments(total: number, count: number) {
 }
 
 export function buildInstallmentTransactions(input: InstallmentTransactionInput): InstallmentTransactionOutput[] {
-  const count = normalizeInstallments(input.installments);
+  const count = normalizeInstallments(input.installments, input.payment);
   const values = splitInstallments(input.amount, count);
   const groupId = count > 1 ? `parcelado-${input.idSeed}` : undefined;
   return values.map((amount, index) => ({

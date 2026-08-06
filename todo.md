@@ -55,3 +55,8 @@
 - [x] Validar explicitamente a ordem em desktop e mobile e confirmar persistência após recarregar
 - [x] Adicionar testes específicos para renomeação de categorias e subcategorias, incluindo prevenção de nomes duplicados
 - [x] Validar de forma verificável a persistência da ordem após recarregar a página
+- [x] Permitir parcelamento em compras com forma Crédito ou Pix
+- [x] Manter quantidade padrão de 1 e restringir Débito e Dinheiro a uma parcela
+- [x] Atualizar regra de exibição, normalização e geração de parcelas
+- [x] Adicionar testes para Crédito, Pix, Débito e Dinheiro
+- [x] Validar interface e publicar a nova versão
