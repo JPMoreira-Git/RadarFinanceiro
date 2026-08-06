@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateMonthly, buildInstallmentTransactions, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
+import { aggregateMonthly, buildInstallmentTransactions, canDeleteCategory, canDeleteSubcategory, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, renameListItem, renameNamedEntry, reorderListItem, reorderNamedEntries, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
 
 describe("summarizeTransactions", () => {
   it("calculates income, expenses, balance and investment coverage", () => {
@@ -127,3 +127,30 @@ describe("buildInstallmentTransactions", () => {
     expect(created[0]?.installmentCount).toBeUndefined();
   });
 });
+
+describe("category management helpers", () => {
+  it("reorders categories and preserves the new insertion order", () => {
+    const reordered = reorderNamedEntries({ Moradia: ["Aluguel"], Transporte: ["Combustível"], Lazer: ["Viagens"] }, "Lazer", "Moradia");
+    expect(Object.keys(reordered)).toEqual(["Lazer", "Moradia", "Transporte"]);
+  });
+
+  it("reorders subcategories and keeps invalid moves unchanged", () => {
+    expect(reorderListItem(["Aluguel", "Condomínio", "IPTU"], 2, 0)).toEqual(["IPTU", "Aluguel", "Condomínio"]);
+    expect(reorderListItem(["Aluguel", "Condomínio"], -1, 0)).toEqual(["Aluguel", "Condomínio"]);
+  });
+
+  it("blocks deletion when a category or subcategory is used by a transaction", () => {
+    const transactions = [{ category: "Moradia", subcategory: "Aluguel" }];
+    expect(canDeleteCategory(transactions, "Moradia")).toBe(false);
+    expect(canDeleteCategory(transactions, "Lazer")).toBe(true);
+    expect(canDeleteSubcategory(transactions, "Moradia", "Aluguel")).toBe(false);
+    expect(canDeleteSubcategory(transactions, "Moradia", "IPTU")).toBe(true);
+  });
+});
+
+  it("renames categories and subcategories while rejecting duplicate names", () => {
+    expect(renameNamedEntry({ Moradia: ["Aluguel"], Lazer: ["Viagens"] }, "Moradia", "Casa")).toEqual({ Casa: ["Aluguel"], Lazer: ["Viagens"] });
+    expect(renameNamedEntry({ Moradia: ["Aluguel"], Lazer: ["Viagens"] }, "Moradia", "Lazer")).toEqual({ Moradia: ["Aluguel"], Lazer: ["Viagens"] });
+    expect(renameListItem(["Aluguel", "IPTU"], "Aluguel", "Casa")).toEqual(["Casa", "IPTU"]);
+    expect(renameListItem(["Aluguel", "IPTU"], "Aluguel", "IPTU")).toEqual(["Aluguel", "IPTU"]);
+  });

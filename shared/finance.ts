@@ -89,6 +89,45 @@ export function removeTransactionScope<T extends { id: number; installmentGroupI
   return transactions.filter((item) => scope === "group" && target.installmentGroupId ? item.installmentGroupId !== target.installmentGroupId : item.id !== target.id);
 }
 
+export function reorderListItem<T>(items: readonly T[], fromIndex: number, toIndex: number) {
+  if (fromIndex < 0 || toIndex < 0 || fromIndex >= items.length || toIndex >= items.length) return [...items];
+  const next = [...items];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
+export function reorderNamedEntries<T>(record: Record<string, T>, from: string, to: string) {
+  const entries = Object.entries(record);
+  const fromIndex = entries.findIndex(([name]) => name === from);
+  const toIndex = entries.findIndex(([name]) => name === to);
+  if (fromIndex < 0 || toIndex < 0) return { ...record };
+  const reordered = reorderListItem(entries, fromIndex, toIndex);
+  return Object.fromEntries(reordered);
+}
+
+export function renameListItem(items: readonly string[], oldName: string, newName: string) {
+  const value = newName.trim();
+  if (!value || value === oldName || items.includes(value)) return [...items];
+  return items.map((item) => item === oldName ? value : item);
+}
+
+export function renameNamedEntry<T>(record: Record<string, T>, oldName: string, newName: string) {
+  const value = newName.trim();
+  if (!value || value === oldName || Object.prototype.hasOwnProperty.call(record, value)) return { ...record };
+  const next: Record<string, T> = {};
+  Object.entries(record).forEach(([name, item]) => { next[name === oldName ? value : name] = item; });
+  return next;
+}
+
+export function canDeleteCategory<T extends { category: string }>(transactions: readonly T[], category: string) {
+  return !transactions.some((item) => item.category === category);
+}
+
+export function canDeleteSubcategory<T extends { category: string; subcategory: string }>(transactions: readonly T[], category: string, subcategory: string) {
+  return !transactions.some((item) => item.category === category && item.subcategory === subcategory);
+}
+
 export function summarizeTransactions(transactions: FinanceTransaction[]) {
   const receita = transactions
     .filter((item) => item.type === "receita")
