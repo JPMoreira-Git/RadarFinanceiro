@@ -75,3 +75,6 @@
 - [x] Testar a agregação percentual e validar visualmente a Visão geral antes de publicar
 - [x] Adicionar teste automatizado para o cálculo de variação percentual de despesas entre mês atual e anterior
 - [x] Adicionar teste de UI da Visão geral verificando o detalhe do card de despesas com a porcentagem correta em relação ao mês anterior
+- [x] Simplificar a legenda do Ritmo Financeiro para Receita Total, Investimentos e Despesas, sem itens duplicados das áreas
+- [x] Validar a nova legenda com testes e publicação
+- [ ] Publicar um novo checkpoint com a correção da legenda do Ritmo Financeiro após a validação já concluída
