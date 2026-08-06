@@ -116,5 +116,13 @@
 - [x] Substituir Investimentos x Despesas por colunas divergentes de saldo mensal, com positivos acima e negativos abaixo da linha central
 - [x] Remover a barra final Acumulado do primeiro gráfico e manter o acumulado somente na linha abaixo
 - [x] Atualizar testes e validar geometricamente a nova visualização com teste automatizado e captura do preview
-- [ ] Publicar a nova visualização em novo checkpoint
+- [x] Publicar a nova visualização em novo checkpoint
 - [x] Adicionar teste determinístico confirmando que saldos positivos ficam acima e negativos abaixo da linha central
+- [x] Incluir a coluna Resultado acumulado no gráfico Investimentos x Despesas
+- [x] Remover o texto explicativo Saldos positivos acima da linha; déficits abaixo e manter apenas o resultado acumulado
+- [x] Atualizar testes e validar verificavelmente o ajuste do gráfico
+- [ ] Publicar o ajuste do gráfico em novo checkpoint
+- [x] Adicionar teste específico confirmando a coluna Resultado no gráfico Investimentos x Despesas e a ausência do texto explicativo antigo
+- [x] Registrar validação verificável do novo rodapé
+- [ ] Publicar o ajuste do gráfico em novo checkpoint
+- [x] Testar que o valor exibido em Resultado acumulado corresponde à soma de investimentos menos despesas

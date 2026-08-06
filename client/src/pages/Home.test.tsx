@@ -74,6 +74,17 @@ describe("DashboardView", () => {
     expect(getTextY("R$3.020")).toBeLessThan(getCircleY(1));
   });
 
+  it("exibe a coluna Resultado e o rodapé acumulado sem o texto explicativo antigo", () => {
+    render(<DashboardView transactions={[
+      { id: 1, date: "2026-08-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },
+      { id: 2, date: "2026-08-06", type: "despesa", amount: 40, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    expect(screen.getAllByText("Resultado").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Resultado acumulado").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("+R$ 60,00").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Saldos positivos acima da linha; déficits abaixo")).not.toBeInTheDocument();
+  });
+
   it("calcula a evolução percentual das despesas contra o mês anterior", () => {
     expect(Number(percentageChange(966.1, 3020)?.toFixed(1))).toBe(-68);
     expect(percentageChange(100, 0)).toBeNull();
