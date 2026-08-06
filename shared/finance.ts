@@ -13,6 +13,10 @@ export function shouldShowInstallments(type: "receita" | "despesa", _payment: st
   return type === "despesa";
 }
 
+export function updateInstallmentsInput(value: string) {
+  return value;
+}
+
 export function normalizeInstallments(value: string | number, payment?: string) {
   if (payment && !canUseInstallments(payment)) return 1;
   return Math.max(1, Math.min(60, Number(value) || 1));

@@ -60,3 +60,10 @@
 - [x] Atualizar regra de exibição, normalização e geração de parcelas
 - [x] Adicionar testes para Crédito, Pix, Débito e Dinheiro
 - [x] Validar interface e publicar a nova versão
+- [x] Permitir apagar temporariamente o campo de quantidade de parcelas sem inserir 1 automaticamente durante a digitação
+- [x] Manter 1 parcela somente como fallback na submissão quando o campo estiver vazio
+- [x] Testar digitação de 2, campo vazio e geração de parcelas sem concatenar com o valor anterior
+- [x] Adicionar teste automatizado específico do campo de parcelas para apagar o valor e digitar 2 sem virar 12
+- [x] Validar por interação ou evidência visual o fluxo corrigido do campo antes do checkpoint
+- [x] Adicionar teste de interação do formulário Novo lançamento cobrindo apagar o campo, digitar 2 e confirmar que o valor exibido é 2
+- [ ] Validar explicitamente a tela Novo lançamento após a interação com o campo de parcelas (bloqueado no preview por autenticação OAuth; coberto pelo teste de formulário real)

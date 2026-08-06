@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateMonthly, buildInstallmentTransactions, canDeleteCategory, canUseInstallments, canDeleteSubcategory, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, renameListItem, renameNamedEntry, reorderListItem, reorderNamedEntries, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
+import { aggregateMonthly, buildInstallmentTransactions, canDeleteCategory, canUseInstallments, canDeleteSubcategory, filterTransactions, installmentDate, normalizeInstallments, removeTransactionScope, updateInstallmentsInput, renameListItem, renameNamedEntry, reorderListItem, reorderNamedEntries, shouldShowInstallments, splitInstallments, summarizeTransactions } from "../shared/finance";
 
 describe("summarizeTransactions", () => {
   it("calculates income, expenses, balance and investment coverage", () => {
@@ -102,8 +102,10 @@ describe("installment form behavior", () => {
     expect(canUseInstallments("Conta conjunta")).toBe(false);
   });
 
-  it("submits an empty installment field as one installment", () => {
-    expect(normalizeInstallments("")).toBe(1);
+  it("keeps the controlled input empty or as 2 while normalizing only on submit", () => {
+    expect(updateInstallmentsInput("")).toBe("");
+    expect(updateInstallmentsInput("2")).toBe("2");
+    expect(normalizeInstallments(updateInstallmentsInput("") as string)).toBe(1);
   });
 });
 
