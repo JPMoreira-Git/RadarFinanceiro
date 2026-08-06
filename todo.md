@@ -77,4 +77,8 @@
 - [x] Adicionar teste de UI da Visão geral verificando o detalhe do card de despesas com a porcentagem correta em relação ao mês anterior
 - [x] Simplificar a legenda do Ritmo Financeiro para Receita Total, Investimentos e Despesas, sem itens duplicados das áreas
 - [x] Validar a nova legenda com testes e publicação
-- [ ] Publicar um novo checkpoint com a correção da legenda do Ritmo Financeiro após a validação já concluída
+- [x] Publicar um novo checkpoint com a correção da legenda do Ritmo Financeiro após a validação já concluída
+- [x] Remover o título Primeiro cenário e renomear o primeiro gráfico para Investimentos x Despesas
+- [x] Calcular mês a mês o saldo de investimentos menos despesas e exibir acumulado após agosto
+- [x] Adicionar testes e validar visualmente a nova cascata mensal
+- [ ] Publicar um novo checkpoint com a nova cascata mensal
