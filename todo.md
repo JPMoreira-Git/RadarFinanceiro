@@ -102,9 +102,14 @@
 - [x] Fazer os seletores de mês da Visão geral alterarem o mês selecionado de fato
 - [x] Atualizar cards, gráficos e lançamentos da Visão geral conforme o mês escolhido
 - [x] Adicionar testes de navegação mensal e validar visualmente a correção
-- [ ] Publicar a correção dos seletores de mês em novo checkpoint
+- [x] Publicar a correção dos seletores de mês em novo checkpoint
 - [x] Filtrar Últimos lançamentos pelo mês selecionado e mostrar estado vazio quando necessário
 - [x] Fazer a cascata do segundo cenário acompanhar o mês selecionado, mantendo a cascata mensal histórica como visão independente
 - [x] Adicionar teste de UI que clique em julho e verifique mudança real nos cards e na atividade
 - [x] Validar a troca completa por teste automatizado
-- [ ] Publicar novo checkpoint com a correção dos seletores de mês
+- [x] Publicar novo checkpoint com a correção dos seletores de mês
+- [x] Posicionar os rótulos de Investimentos e Despesas acima ou abaixo do marcador conforme a posição relativa das linhas
+- [x] Adicionar teste de posicionamento e validar visualmente a correção
+- [ ] Publicar a correção de posicionamento em novo checkpoint
+- [x] Adicionar teste do SVG renderizado verificando os rótulos acima/abaixo dos respectivos marcadores
+- [x] Validar o posicionamento dos rótulos por teste automatizado do SVG renderizado nos dois cenários de sobreposição

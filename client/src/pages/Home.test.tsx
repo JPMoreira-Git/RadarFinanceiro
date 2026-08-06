@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
-import { buildInvestmentExpenseWaterfall, DashboardView, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, NewTransaction, percentageChange } from "./Home";
+import { buildInvestmentExpenseWaterfall, DashboardView, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -49,6 +49,24 @@ describe("DashboardView", () => {
     expect(financialChartY(3020, 10840)).toBe(barY);
     expect(financialChartBarY(10840, 10840)).toBe(24);
     expect(financialChartY(0, 10840)).toBe(228);
+  });
+
+  it("posiciona os rótulos conforme a linha que está acima", () => {
+    expect(lineLabelOffsets(100, 140)).toEqual({ investments: -8, expenses: 16 });
+    expect(lineLabelOffsets(160, 120)).toEqual({ investments: 16, expenses: -8 });
+    expect(lineLabelOffsets(130, 130)).toEqual({ investments: -8, expenses: 16 });
+  });
+
+  it("posiciona os rótulos do SVG acima e abaixo dos marcadores correspondentes", () => {
+    const { container, rerender } = render(<FinancialRhythmChart data={[{ month: "jul", receita: 10840, investimentos: 3020, gastos: 1500 }]} />);
+    const getTextY = (value: string) => Number(Array.from(container.querySelectorAll("text")).find((node) => node.textContent === value)?.getAttribute("y"));
+    const getCircleY = (index: number) => Number(container.querySelectorAll("circle")[index]?.getAttribute("cy"));
+    expect(getTextY("R$3.020")).toBeLessThan(getCircleY(0));
+    expect(getTextY("R$1.500")).toBeGreaterThan(getCircleY(1));
+
+    rerender(<FinancialRhythmChart data={[{ month: "jul", receita: 10840, investimentos: 1500, gastos: 3020 }]} />);
+    expect(getTextY("R$1.500")).toBeGreaterThan(getCircleY(0));
+    expect(getTextY("R$3.020")).toBeLessThan(getCircleY(1));
   });
 
   it("calcula a evolução percentual das despesas contra o mês anterior", () => {
