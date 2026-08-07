@@ -14,14 +14,14 @@ export default function InstallmentField({ value, disabled, canUseInstallments, 
       <span className="mb-2 block text-xs font-semibold text-[#71847a]">Quantidade de parcelas</span>
       <Input
         aria-label="Quantidade de parcelas"
-        type="number"
-        min="1"
-        max="60"
+        type="text"
         inputMode="numeric"
+        pattern="[0-9]*"
         placeholder="1"
         value={value}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
+        onFocus={() => { if (value === "1") onChange(""); }}
+        onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
         className="h-12 rounded-xl border-[#dfe9e2] bg-[#fbfcfb] text-[#31584b] disabled:cursor-not-allowed disabled:bg-[#f1f4f2] disabled:text-[#8b9c94]"
       />
       <span className="mt-1 block text-[11px] text-[#8b9c94]">

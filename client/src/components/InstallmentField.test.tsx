@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import InstallmentField from "./InstallmentField";
 
 function Harness() {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState("1");
   return <InstallmentField value={value} disabled={false} canUseInstallments onChange={setValue} />;
 }
 
@@ -14,13 +14,14 @@ describe("InstallmentField", () => {
   it("permite apagar o campo e digitar 2 sem concatenar com 1", async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    const input = screen.getByRole("spinbutton", { name: "Quantidade de parcelas" });
+    const input = screen.getByRole("textbox", { name: "Quantidade de parcelas" });
 
-    expect(input).toHaveValue(null);
-    await user.clear(input);
+    expect(input).toHaveValue("1");
+    await user.click(input);
+    expect(input).toHaveValue("");
     await user.type(input, "2");
 
-    expect(input).toHaveValue(2);
-    expect(input).not.toHaveValue(12);
+    expect(input).toHaveValue("2");
+    expect(input).not.toHaveValue("12");
   });
 });

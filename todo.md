@@ -140,4 +140,10 @@
 - [x] Exibir no card de receitas a variação percentual em relação ao mês anterior
 - [x] Aplicar cor verde à variação negativa e cor vermelha à variação positiva no card de despesas
 - [x] Atualizar testes e validar visualmente os ajustes dos cards
-- [ ] Publicar os ajustes dos cards em novo checkpoint
+- [x] Publicar os ajustes dos cards em novo checkpoint
+- [x] Ocultar Forma de pagamento quando o tipo Receita estiver selecionado
+- [x] Definir a data atual como padrão, mantendo o campo Data editável
+- [x] Transformar Quantidade de parcelas em input sem setas, iniciando em 1 e limpando ao focar
+- [x] Definir Ambos como responsável padrão, mantendo as opções alteráveis
+- [x] Atualizar testes e validar a interface
+- [ ] Salvar a versão pronta para teste em novo checkpoint

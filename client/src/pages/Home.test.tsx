@@ -194,7 +194,10 @@ describe("NewTransaction", () => {
     render(<NewTransaction onAdd={vi.fn()} categoriesData={categories} payments={["Crédito", "Pix", "Débito", "Dinheiro"]} />);
 
     const responsible = screen.getByRole("combobox", { name: "Responsável" });
-    expect(responsible).toHaveValue("João Paulo");
+    expect(responsible).toHaveValue("Ambos");
+    const now = new Date();
+    const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    expect(screen.getByLabelText("Data")).toHaveValue(localDate);
     expect(screen.getByRole("option", { name: "João Paulo" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Danieli" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Você" })).not.toBeInTheDocument();
@@ -203,11 +206,24 @@ describe("NewTransaction", () => {
     const payment = screen.getByRole("combobox", { name: "Forma de pagamento" });
     await user.selectOptions(payment, "Crédito");
 
-    const installments = screen.getByRole("spinbutton", { name: "Quantidade de parcelas" });
-    await user.clear(installments);
+    const installments = screen.getByRole("textbox", { name: "Quantidade de parcelas" });
+    expect(installments).toHaveValue("1");
+    await user.click(installments);
+    expect(installments).toHaveValue("");
     await user.type(installments, "2");
 
-    expect(installments).toHaveValue(2);
-    expect(installments).not.toHaveValue(12);
+    expect(installments).toHaveValue("2");
+    expect(installments).not.toHaveValue("12");
+  });
+
+  it("oculta a forma de pagamento quando Receita é selecionada", async () => {
+    const user = userEvent.setup();
+    render(<NewTransaction onAdd={vi.fn()} categoriesData={categories} payments={["Crédito", "Pix"]} />);
+
+    expect(screen.getByRole("combobox", { name: "Forma de pagamento" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Receita/i }));
+    expect(screen.queryByRole("combobox", { name: "Forma de pagamento" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Despesa/i }));
+    expect(screen.getByRole("combobox", { name: "Forma de pagamento" })).toBeInTheDocument();
   });
 });
