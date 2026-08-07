@@ -121,6 +121,28 @@ describe("DashboardView", () => {
     expect(screen.getByText("−68,0% em relação a julho")).toBeInTheDocument();
   });
 
+  it("exibe a porcentagem de receitas em relação a julho", () => {
+    render(<DashboardView transactions={[
+      { id: 1, date: "2026-08-05", type: "receita", amount: 10840, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-07-05", type: "receita", amount: 10480, category: "Receitas", subcategory: "Salário", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    expect(screen.getByText("+3,4% em relação a julho")).toBeInTheDocument();
+  });
+
+  it("usa verde para queda das despesas e vermelho para aumento", () => {
+    const { rerender } = render(<DashboardView transactions={[
+      { id: 1, date: "2026-08-05", type: "despesa", amount: 100, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-07-05", type: "despesa", amount: 200, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    expect(screen.getByText("−50,0% em relação a julho")).toHaveClass("text-[#297059]");
+
+    rerender(<DashboardView transactions={[
+      { id: 1, date: "2026-08-05", type: "despesa", amount: 300, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-07-05", type: "despesa", amount: 200, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    expect(screen.getByText("+50,0% em relação a julho")).toHaveClass("text-[#a55348]");
+  });
+
   it("navega para o mês anterior ao clicar no seletor", async () => {
     const onMonthChange = vi.fn();
     const user = userEvent.setup();

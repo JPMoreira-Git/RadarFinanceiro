@@ -135,5 +135,9 @@
 - [x] Aplicar ao segundo gráfico o mesmo padrão visual do primeiro, mantendo Resultado acumulado abaixo
 - [x] Remover R$ e sinais +/− dos rótulos dos gráficos, preservando os indicadores Resultado acumulado
 - [x] Atualizar testes e validar visualmente a nova configuração dos gráficos
-- [ ] Publicar a nova configuração dos gráficos em novo checkpoint
+- [x] Publicar a nova configuração dos gráficos em novo checkpoint
 - [x] Adicionar teste de UI confirmando o título Renda Total x Despesas, a ausência de Segundo cenário e os rótulos sem R$ e sinais nos gráficos
+- [x] Exibir no card de receitas a variação percentual em relação ao mês anterior
+- [x] Aplicar cor verde à variação negativa e cor vermelha à variação positiva no card de despesas
+- [x] Atualizar testes e validar visualmente os ajustes dos cards
+- [ ] Publicar os ajustes dos cards em novo checkpoint
