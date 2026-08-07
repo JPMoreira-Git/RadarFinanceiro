@@ -146,4 +146,14 @@
 - [x] Transformar Quantidade de parcelas em input sem setas, iniciando em 1 e limpando ao focar
 - [x] Definir Ambos como responsável padrão, mantendo as opções alteráveis
 - [x] Atualizar testes e validar a interface
-- [ ] Salvar a versão pronta para teste em novo checkpoint
+- [x] Salvar a versão pronta para teste em novo checkpoint
+- [x] Instalar a biblioteca oficial do Supabase e configurar URL/anon key via segredos
+- [x] Criar procedimento backend para inserir transações na tabela transacoes
+- [x] Conectar o submit de Novo Lançamento ao procedimento Supabase com tratamento de sucesso e erro
+- [x] Atualizar testes e validar o contrato de inserção, a tela e a integração Supabase
+- [ ] Salvar a integração Supabase em novo checkpoint para teste real
+- [x] Mapear e documentar corretamente os campos disponíveis na tabela transacoes, incluindo limitações de categoria e observação
+- [x] Enviar todas as parcelas em uma única mutation para evitar gravação parcial
+- [x] Adicionar teste fiel da procedure transactions.create e do insert em lote
+- [x] Documentar o schema real de transacoes e a limitação de categoria_id/campos concatenados
+- [x] Validar que categoria_id é opcional no schema atual e registrar o caminho para futuro catálogo de categorias

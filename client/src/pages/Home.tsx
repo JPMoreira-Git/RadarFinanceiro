@@ -6,6 +6,7 @@ import React, { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { aggregateMonthly, buildInstallmentTransactions, canDeleteCategory, canDeleteSubcategory, canUseInstallments, filterTransactions, normalizeInstallments, removeTransactionScope, updateInstallmentsInput, renameListItem, renameNamedEntry, reorderListItem, reorderNamedEntries, shouldShowInstallments, splitInstallments, summarizeTransactions, isInvestmentIncome } from "@shared/finance";
 import { usePersistentState } from "@/hooks/usePersistentState";
+import { trpc } from "@/lib/trpc";
 import CategoryManager from "@/components/CategoryManager";
 import InstallmentField from "@/components/InstallmentField";
 import {
@@ -240,7 +241,7 @@ function WaterfallCard({ title, eyebrow, values }: { title: string; eyebrow?: st
   return <Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardHeader className="p-5 pb-2">{eyebrow && <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a16d45]">{eyebrow}</p>}<CardTitle className="mt-1 font-display text-lg text-[#173f35]">{title}</CardTitle></CardHeader><CardContent className="p-5 pt-2"><div className="h-48 w-full"><svg viewBox="0 0 620 190" className="h-full w-full" role="img" aria-label={title}><line x1="18" x2="602" y1={scale(0)} y2={scale(0)} stroke="#dfe9e2" strokeDasharray="4 5" />{steps.map((item, index) => { const x = 42 + index * (540 / steps.length); const top = scale(Math.max(item.start, item.end)); const bottom = scale(Math.min(item.start, item.end)); const height = Math.max(12, bottom - top); return <g key={item.label}><rect x={x} y={top} width={76} height={height} rx={9} fill={item.tone === "positive" ? "#b7d9c5" : "#edbcb5"} /><text x={x + 38} y={top - 8} textAnchor="middle" fontSize="11" fontWeight="700" fill={item.tone === "positive" ? "#297059" : "#a55348"}>{chartLabel(item.value)}</text><text x={x + 38} y="170" textAnchor="middle" fontSize="10" fill="#788a81">{item.label}</text>{index < steps.length - 1 && <line x1={x + 76} x2={x + 540 / steps.length} y1={scale(item.end)} y2={scale(item.end)} stroke="#b8c9bf" strokeDasharray="3 4" />}</g>; })}</svg></div><div className="mt-2 flex items-center justify-between rounded-xl bg-[#f5f8f5] px-3 py-2"><span className="text-xs font-semibold text-[#788a81]">Resultado acumulado</span><span className={`text-sm font-bold ${result >= 0 ? "text-[#297059]" : "text-[#a55348]"}`}>{result >= 0 ? "+" : "−"}{currency(Math.abs(result))}</span></div></CardContent></Card>;
 }
 
-export function NewTransaction({ onAdd, categoriesData, payments }: { onAdd: (transaction: Transaction) => void; categoriesData: Record<string, string[]>; payments: string[] }) {
+export function NewTransaction({ onAdd, categoriesData, payments }: { onAdd: (transactions: Transaction[]) => void | Promise<unknown>; categoriesData: Record<string, string[]>; payments: string[] }) {
   const [form, setForm] = useState({ date: todayInputValue(), type: "despesa" as TransactionType, amount: "", category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Conta conjunta", note: "", installments: "1" });
   const availableCategories = form.type === "receita" ? { Receitas: categoriesData.Receitas ?? [] } : Object.fromEntries(Object.entries(categoriesData).filter(([name]) => name !== "Receitas"));
   const update = (key: string, value: string) => setForm((current) => {
@@ -251,15 +252,19 @@ export function NewTransaction({ onAdd, categoriesData, payments }: { onAdd: (tr
     }
     return { ...current, [key]: value, ...(key === "category" ? { subcategory: categoriesData[value]?.[0] ?? "" } : {}) };
   });
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     const amount = Number(form.amount.replace(",", "."));
     const installments = normalizeInstallments(form.installments);
     if (!amount || amount <= 0) { toast.error("Informe um valor válido para o lançamento."); return; }
     const created = buildInstallmentTransactions({ idSeed: Date.now(), date: form.date, type: form.type, amount, category: form.category, subcategory: form.subcategory, responsible: form.responsible, payment: form.payment, note: form.note, installments });
-    created.forEach(onAdd);
-    toast.success(installments > 1 ? `Compra dividida em ${installments} parcelas.` : "Lançamento adicionado ao resumo.");
-    setForm((current) => ({ ...current, amount: "", note: "", installments: "1" }));
+    try {
+      await onAdd(created);
+      toast.success(installments > 1 ? `Compra dividida em ${installments} parcelas.` : "Lançamento adicionado ao resumo.");
+      setForm((current) => ({ ...current, amount: "", note: "", installments: "1" }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar o lançamento.");
+    }
   };
   return <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:py-8"><div className="mb-7"><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#a16d45]">Novo registro</p><h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[#173f35]">O que aconteceu hoje?</h1><p className="mt-2 text-sm text-[#77877f]">Registre uma entrada ou saída para manter o fluxo da família atualizado.</p></div><form onSubmit={submit} className="space-y-5"><Card className="rounded-2xl border-[#e0e9e3] bg-white shadow-[0_8px_30px_rgba(30,62,48,0.04)]"><CardContent className="space-y-5 p-5 sm:p-7"><div><p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-[#71847a]">Tipo de lançamento</p><div className="grid grid-cols-2 gap-3"><button type="button" onClick={() => update("type", "despesa")} className={`rounded-xl border p-4 text-left transition-all ${form.type === "despesa" ? "border-[#c4685a] bg-[#fcf0ee] text-[#a55348]" : "border-[#e0e9e3] bg-white text-[#82918a]"}`}><ArrowDownRight className="mb-3 h-5 w-5" /><p className="text-sm font-semibold">Despesa</p><p className="mt-1 text-xs opacity-70">Algo que saiu</p></button><button type="button" onClick={() => update("type", "receita")} className={`rounded-xl border p-4 text-left transition-all ${form.type === "receita" ? "border-[#73a88e] bg-[#edf6f0] text-[#297059]" : "border-[#e0e9e3] bg-white text-[#82918a]"}`}><ArrowUpRight className="mb-3 h-5 w-5" /><p className="text-sm font-semibold">Receita</p><p className="mt-1 text-xs opacity-70">Algo que entrou</p></button></div></div><div className="grid gap-4 sm:grid-cols-2"><Field label="Valor"><Input value={form.amount} onChange={(event) => update("amount", event.target.value)} inputMode="decimal" placeholder="0,00" className="h-12 rounded-xl border-[#dfe9e2] bg-[#fbfcfb] text-lg font-semibold text-[#173f35]" /></Field><Field label="Data"><Input type="date" value={form.date} onChange={(event) => update("date", event.target.value)} className="h-12 rounded-xl border-[#dfe9e2] bg-[#fbfcfb] text-[#31584b]" /></Field><Field label="Categoria"><select value={form.category} onChange={(event) => update("category", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]">{Object.keys(availableCategories).map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="Subcategoria"><select value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]">{(availableCategories[form.category] ?? []).map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="Responsável"><select value={form.responsible} onChange={(event) => update("responsible", event.target.value)} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]"><option>João Paulo</option><option>Danieli</option><option>Ambos</option></select></Field>{form.type === "despesa" && <Field label="Forma de pagamento"><select value={form.payment} onChange={(event) => { const payment = event.target.value; update("payment", payment); if (!canUseInstallments(payment)) update("installments", "1"); }} className="h-12 w-full rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 text-sm text-[#31584b] outline-none focus:border-[#9a6b43]">{payments.map((item) => <option key={item}>{item}</option>)}</select></Field>}{shouldShowInstallments(form.type, form.payment) && <InstallmentField value={form.installments} disabled={!canUseInstallments(form.payment)} canUseInstallments={canUseInstallments(form.payment)} onChange={(value) => update("installments", updateInstallmentsInput(value))} />}</div><p className="text-xs text-[#8b9c94]">A data informada representa a primeira parcela. As demais serão lançadas nos meses seguintes.</p><Field label="Observação"><textarea value={form.note} onChange={(event) => update("note", event.target.value)} placeholder="Adicione um contexto, se quiser..." className="min-h-24 w-full resize-none rounded-xl border border-[#dfe9e2] bg-[#fbfcfb] px-3 py-3 text-sm text-[#31584b] outline-none placeholder:text-[#a6b1ab] focus:border-[#9a6b43]" /></Field></CardContent></Card><Button type="submit" className="h-12 w-full rounded-xl bg-[#173f35] font-semibold text-white shadow-lg shadow-[#173f35]/15 hover:bg-[#235b4c]"><Plus className="mr-2 h-4 w-4" />Salvar lançamento</Button></form></div>;
 }
@@ -297,7 +302,25 @@ export default function Home() {
   const [dashboardMonth, setDashboardMonth] = useState<string | undefined>(undefined);
   const [categoriesData, setCategoriesData] = usePersistentState<Record<string, string[]>>("fluxo:categories", { ...categories });
   const [payments, setPayments] = usePersistentState<string[]>("fluxo:payments", ["Conta conjunta", "Cartão principal", "Conta investimentos", "Débito automático"]);
-  const addTransaction = (transaction: Transaction) => setTransactions((current) => [transaction, ...current]);
+  const createTransactions = trpc.transactions.create.useMutation();
+  const addTransactions = async (newTransactions: Transaction[]) => {
+    await createTransactions.mutateAsync({
+      transactions: newTransactions.map((transaction) => ({
+        date: transaction.date,
+        type: transaction.type,
+        amount: transaction.amount,
+        category: transaction.category,
+        subcategory: transaction.subcategory,
+        responsible: transaction.responsible,
+        payment: transaction.type === "receita" ? null : transaction.payment,
+        note: transaction.note || null,
+        installmentGroupId: transaction.installmentGroupId ?? null,
+        installmentNumber: transaction.installmentNumber,
+        installmentCount: transaction.installmentCount,
+      })),
+    });
+    setTransactions((current) => [...newTransactions, ...current]);
+  };
   const addCategory = (name: string) => setCategoriesData((current) => current[name] ? current : { ...current, [name]: ["Geral"] });
   const addSubcategory = (category: string, subcategory: string) => setCategoriesData((current) => ({ ...current, [category]: current[category]?.includes(subcategory) ? current[category] : [...(current[category] ?? []), subcategory] }));
   const renameCategory = (oldName: string, newName: string) => { const next = renameNamedEntry(categoriesData, oldName, newName); if (Object.keys(next).join("|") === Object.keys(categoriesData).join("|")) { toast.error("Nome vazio, igual ou já utilizado."); return; } setCategoriesData(next); const value = Object.keys(next).find((item) => !Object.prototype.hasOwnProperty.call(categoriesData, item)) ?? oldName; setTransactions((current) => current.map((item) => item.category === oldName ? { ...item, category: value } : item)); toast.success("Categoria atualizada."); };
@@ -313,5 +336,5 @@ export default function Home() {
   const deleteTransaction = (id: number) => { setTransactions((current) => current.filter((item) => item.id !== id)); toast.success("Lançamento removido."); };
   const deleteTransactionGroup = (groupId: string) => { setTransactions((current) => current.filter((item) => item.installmentGroupId !== groupId)); toast.success("Compra parcelada removida."); };
   const view = useMemo(() => location === "/lancamentos" ? "transactions" : location === "/novo" ? "new" : location === "/configuracoes" ? "settings" : "dashboard", [location]);
-  return <><div className="min-h-screen">{view === "dashboard" && <DashboardView transactions={transactions} selectedMonth={dashboardMonth} onMonthChange={setDashboardMonth} />}{view === "transactions" && <TransactionsView transactions={transactions} onDelete={deleteTransaction} onDeleteGroup={deleteTransactionGroup} onUpdate={updateTransaction} onUpdateGroup={updateTransactionGroup} categoriesData={categoriesData} payments={payments} />}{view === "new" && <NewTransaction onAdd={addTransaction} categoriesData={categoriesData} payments={payments} />}{view === "settings" && <SettingsView categoriesData={categoriesData} onAddCategory={addCategory} onAddSubcategory={addSubcategory} onRenameCategory={renameCategory} onRenameSubcategory={renameSubcategory} onRemoveCategory={removeCategory} onRemoveSubcategory={removeSubcategory} onReorderCategory={reorderCategory} onReorderSubcategory={reorderSubcategory} payments={payments} onAddPayment={addPayment} onRemovePayment={removePayment} />}</div><MobileNav location={location} setLocation={setLocation} /></>;
+  return <><div className="min-h-screen">{view === "dashboard" && <DashboardView transactions={transactions} selectedMonth={dashboardMonth} onMonthChange={setDashboardMonth} />}{view === "transactions" && <TransactionsView transactions={transactions} onDelete={deleteTransaction} onDeleteGroup={deleteTransactionGroup} onUpdate={updateTransaction} onUpdateGroup={updateTransactionGroup} categoriesData={categoriesData} payments={payments} />}{view === "new" && <NewTransaction onAdd={addTransactions} categoriesData={categoriesData} payments={payments} />}{view === "settings" && <SettingsView categoriesData={categoriesData} onAddCategory={addCategory} onAddSubcategory={addSubcategory} onRenameCategory={renameCategory} onRenameSubcategory={renameSubcategory} onRemoveCategory={removeCategory} onRemoveSubcategory={removeSubcategory} onReorderCategory={reorderCategory} onReorderSubcategory={reorderSubcategory} payments={payments} onAddPayment={addPayment} onRemovePayment={removePayment} />}</div><MobileNav location={location} setLocation={setLocation} /></>;
 }
