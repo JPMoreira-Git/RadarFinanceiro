@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+afterEach(() => cleanup());
 import React from "react";
-import { buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
+import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -66,12 +68,36 @@ describe("DashboardView", () => {
     const { container, rerender } = render(<FinancialRhythmChart data={[{ month: "jul", receita: 10840, investimentos: 3020, gastos: 1500 }]} />);
     const getTextY = (value: string) => Number(Array.from(container.querySelectorAll("text")).find((node) => node.textContent === value)?.getAttribute("y"));
     const getCircleY = (index: number) => Number(container.querySelectorAll("circle")[index]?.getAttribute("cy"));
-    expect(getTextY("R$3.020")).toBeLessThan(getCircleY(0));
-    expect(getTextY("R$1.500")).toBeGreaterThan(getCircleY(1));
+    expect(getTextY("3.020")).toBeLessThan(getCircleY(0));
+    expect(getTextY("1.500")).toBeGreaterThan(getCircleY(1));
 
     rerender(<FinancialRhythmChart data={[{ month: "jul", receita: 10840, investimentos: 1500, gastos: 3020 }]} />);
-    expect(getTextY("R$1.500")).toBeGreaterThan(getCircleY(0));
-    expect(getTextY("R$3.020")).toBeLessThan(getCircleY(1));
+    expect(getTextY("1.500")).toBeGreaterThan(getCircleY(0));
+    expect(getTextY("3.020")).toBeLessThan(getCircleY(1));
+  });
+
+  it("calcula Renda Total menos Despesas com todas as receitas do mês", () => {
+    const steps = buildIncomeExpenseWaterfall([
+      { id: 1, date: "2026-01-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-01-10", type: "receita", amount: 40, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "Danieli", payment: "Conta investimentos", note: "" },
+      { id: 3, date: "2026-01-20", type: "despesa", amount: 80, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: 4, date: "2026-02-05", type: "despesa", amount: 50, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+    ]);
+    expect(steps.slice(0, 2).map(({ label, value }) => ({ label, value }))).toEqual([{ label: "Jan", value: 60 }, { label: "Fev", value: -50 }]);
+    expect(steps.at(-1)).toMatchObject({ label: "Acumulado", value: 10, isTotal: true });
+  });
+
+  it("usa o título Renda Total x Despesas e rótulos gráficos sem R$ ou sinais", () => {
+    const { container } = render(<DashboardView selectedMonth="2026-08" transactions={[
+      { id: 1, date: "2026-08-05", type: "receita", amount: 7400, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: 2, date: "2026-08-06", type: "despesa", amount: 1000, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+    ]} />);
+    const view = within(container);
+    expect(view.getByText("Renda Total x Despesas")).toBeInTheDocument();
+    expect(view.queryByText("Segundo cenário")).not.toBeInTheDocument();
+    expect(view.getAllByText("6.400").length).toBeGreaterThan(0);
+    expect(view.queryByText("+6.400")).not.toBeInTheDocument();
+    expect(view.queryByText("R$6.400")).not.toBeInTheDocument();
   });
 
   it("mantém o acumulado sem renderizar uma barra Resultado duplicada", () => {

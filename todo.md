@@ -129,4 +129,11 @@
 - [x] Remover a última barra Resultado do gráfico Investimentos x Despesas
 - [x] Manter o indicador Resultado acumulado abaixo com o mesmo valor calculado
 - [x] Atualizar os testes e validar a ausência da barra duplicada
-- [ ] Publicar a remoção da barra duplicada em novo checkpoint
+- [x] Publicar a remoção da barra duplicada em novo checkpoint
+- [x] Renomear o segundo gráfico para Renda Total x Despesas e remover o título Segundo cenário
+- [x] Calcular Renda Total como todas as receitas do mês menos todas as despesas e mostrar saldo positivo/negativo no gráfico divergente
+- [x] Aplicar ao segundo gráfico o mesmo padrão visual do primeiro, mantendo Resultado acumulado abaixo
+- [x] Remover R$ e sinais +/− dos rótulos dos gráficos, preservando os indicadores Resultado acumulado
+- [x] Atualizar testes e validar visualmente a nova configuração dos gráficos
+- [ ] Publicar a nova configuração dos gráficos em novo checkpoint
+- [x] Adicionar teste de UI confirmando o título Renda Total x Despesas, a ausência de Segundo cenário e os rótulos sem R$ e sinais nos gráficos
