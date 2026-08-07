@@ -121,8 +121,12 @@
 - [x] Incluir a coluna Resultado acumulado no gráfico Investimentos x Despesas
 - [x] Remover o texto explicativo Saldos positivos acima da linha; déficits abaixo e manter apenas o resultado acumulado
 - [x] Atualizar testes e validar verificavelmente o ajuste do gráfico
-- [ ] Publicar o ajuste do gráfico em novo checkpoint
+- [x] Publicar o ajuste do gráfico em novo checkpoint
 - [x] Adicionar teste específico confirmando a coluna Resultado no gráfico Investimentos x Despesas e a ausência do texto explicativo antigo
 - [x] Registrar validação verificável do novo rodapé
-- [ ] Publicar o ajuste do gráfico em novo checkpoint
+- [x] Publicar o ajuste do gráfico em novo checkpoint
 - [x] Testar que o valor exibido em Resultado acumulado corresponde à soma de investimentos menos despesas
+- [x] Remover a última barra Resultado do gráfico Investimentos x Despesas
+- [x] Manter o indicador Resultado acumulado abaixo com o mesmo valor calculado
+- [x] Atualizar os testes e validar a ausência da barra duplicada
+- [ ] Publicar a remoção da barra duplicada em novo checkpoint

@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
-import { buildInvestmentExpenseWaterfall, DashboardView, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
+import { buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -74,14 +74,11 @@ describe("DashboardView", () => {
     expect(getTextY("R$3.020")).toBeLessThan(getCircleY(1));
   });
 
-  it("exibe a coluna Resultado e o rodapé acumulado sem o texto explicativo antigo", () => {
-    render(<DashboardView transactions={[
-      { id: 1, date: "2026-08-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },
-      { id: 2, date: "2026-08-06", type: "despesa", amount: 40, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
-    ]} />);
-    expect(screen.getAllByText("Resultado").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Resultado acumulado").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("+R$ 60,00").length).toBeGreaterThan(0);
+  it("mantém o acumulado sem renderizar uma barra Resultado duplicada", () => {
+    render(<DivergingBalanceCard title="Investimentos x Despesas" values={[{ label: "Ago", value: 60 }]} />);
+    expect(screen.queryByText("Resultado")).not.toBeInTheDocument();
+    expect(screen.getByText("Resultado acumulado")).toBeInTheDocument();
+    expect(screen.getAllByText(/R\$ 60,00/).length).toBeGreaterThan(0);
     expect(screen.queryByText("Saldos positivos acima da linha; déficits abaixo")).not.toBeInTheDocument();
   });
 
