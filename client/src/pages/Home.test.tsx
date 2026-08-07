@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => cleanup());
 import React from "react";
-import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange } from "./Home";
+import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, resolveTransactions, TransactionsView } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -23,6 +23,80 @@ function DashboardHarness({ transactions }: { transactions: React.ComponentProps
   const [month, setMonth] = React.useState("2026-08");
   return <DashboardView transactions={transactions} selectedMonth={month} onMonthChange={setMonth} />;
 }
+
+describe("Supabase transaction loading", () => {
+  it("normaliza uma linha remota preservando a data usada pelo filtro mensal", () => {
+    const transaction = mapSupabaseTransaction({
+      id: 22,
+      descricao: "Moradia · Aluguel · Parcela remota",
+      valor: 780,
+      data: "2025-11-14",
+      tipo: "despesa",
+      forma_pagamento: "Pix",
+      parcelas: 3,
+      responsavel: "Ambos",
+    });
+
+    expect(transaction).toMatchObject({
+      id: 22,
+      date: "2025-11-14",
+      category: "Moradia",
+      subcategory: "Aluguel",
+      note: "Parcela remota",
+      installmentCount: 3,
+    });
+    expect(transactionMonthOptions([transaction])).toEqual([{ value: "2025-11", label: "Novembro 2025" }]);
+  });
+});
+
+describe("Lançamentos com dados remotos", () => {
+  const remoteRows = [
+    { id: 1, descricao: "Moradia · Aluguel", valor: 100, data: "2026-08-05", tipo: "despesa" as const, forma_pagamento: "Pix", parcelas: 1, responsavel: "Ambos" },
+    { id: 2, descricao: "Receitas · Salário", valor: 200, data: "2026-07-05", tipo: "receita" as const, forma_pagamento: null, parcelas: 1, responsavel: "João Paulo" },
+    { id: 3, descricao: "Lazer · Viagens", valor: 300, data: "2025-12-05", tipo: "despesa" as const, forma_pagamento: "Crédito", parcelas: 2, responsavel: "Danieli" },
+  ];
+
+  it("exibe no select todos os meses e anos únicos das linhas remotas", () => {
+    render(<TransactionsView
+      transactions={resolveTransactions(remoteRows, [])}
+      onDelete={vi.fn()}
+      onDeleteGroup={vi.fn()}
+      onUpdate={vi.fn()}
+      onUpdateGroup={vi.fn()}
+      categoriesData={categories}
+      payments={["Pix", "Crédito"]}
+    />);
+
+    const monthSelect = screen.getByRole("combobox", { name: "Filtrar por mês" });
+    expect(within(monthSelect).getByRole("option", { name: "Agosto 2026" })).toBeInTheDocument();
+    expect(within(monthSelect).getByRole("option", { name: "Julho 2026" })).toBeInTheDocument();
+    expect(within(monthSelect).getByRole("option", { name: "Dezembro 2025" })).toBeInTheDocument();
+  });
+
+  it("usa os dados locais somente enquanto a resposta remota está indisponível", () => {
+    const local = [{ id: 9, date: "2024-01-05", type: "despesa" as const, amount: 10, category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Pix", note: "" }];
+    expect(resolveTransactions(undefined, local)).toBe(local);
+    expect(resolveTransactions([], local)).toEqual([]);
+  });
+});
+
+describe("transactionMonthOptions", () => {
+  it("deriva meses e anos únicos das datas das transações em ordem decrescente", () => {
+    const options = transactionMonthOptions([
+      { id: 1, date: "2026-07-05", type: "despesa", amount: 10, category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Pix", note: "" },
+      { id: 2, date: "2026-08-01", type: "receita", amount: 20, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "", note: "" },
+      { id: 3, date: "2025-12-15", type: "despesa", amount: 30, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
+      { id: 4, date: "2026-07-22", type: "despesa", amount: 40, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
+      { id: 5, date: "data inválida", type: "despesa", amount: 50, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
+    ]);
+
+    expect(options).toEqual([
+      { value: "2026-08", label: "Agosto 2026" },
+      { value: "2026-07", label: "Julho 2026" },
+      { value: "2025-12", label: "Dezembro 2025" },
+    ]);
+  });
+});
 
 describe("InvestmentExpenseWaterfall", () => {
   it("posiciona saldos positivos acima e negativos abaixo da linha central", () => {

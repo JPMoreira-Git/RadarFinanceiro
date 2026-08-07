@@ -51,6 +51,28 @@ export function toSupabaseTransactionRow(transaction: SupabaseTransactionInput):
   };
 }
 
+export type SupabaseTransactionRow = {
+  id: number;
+  descricao: string;
+  valor: number;
+  data: string;
+  tipo: "receita" | "despesa";
+  forma_pagamento: string | null;
+  parcelas: number | null;
+  responsavel: string;
+};
+
+export async function listSupabaseTransactions(): Promise<SupabaseTransactionRow[]> {
+  const { data, error } = await getSupabaseClient()
+    .from("transacoes")
+    .select("id, descricao, valor, data, tipo, forma_pagamento, parcelas, responsavel")
+    .order("data", { ascending: false });
+  if (error) {
+    throw new Error(`Não foi possível carregar as transações do Supabase: ${error.message}`);
+  }
+  return (data ?? []) as SupabaseTransactionRow[];
+}
+
 export async function insertSupabaseTransactions(rows: SupabaseTransactionInsert[]) {
   const { data, error } = await getSupabaseClient().from("transacoes").insert(rows).select();
   if (error) {

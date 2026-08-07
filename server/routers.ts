@@ -3,7 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { insertSupabaseTransactions, toSupabaseTransactionRow } from "./supabase";
+import { insertSupabaseTransactions, listSupabaseTransactions, toSupabaseTransactionRow } from "./supabase";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -20,6 +20,7 @@ export const appRouter = router({
   }),
 
   transactions: router({
+    list: protectedProcedure.query(async () => listSupabaseTransactions()),
     create: protectedProcedure
       .input(z.object({
         transactions: z.array(z.object({

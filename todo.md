@@ -151,7 +151,14 @@
 - [x] Criar procedimento backend para inserir transações na tabela transacoes
 - [x] Conectar o submit de Novo Lançamento ao procedimento Supabase com tratamento de sucesso e erro
 - [x] Atualizar testes e validar o contrato de inserção, a tela e a integração Supabase
-- [ ] Salvar a integração Supabase em novo checkpoint para teste real
+- [x] Salvar a integração Supabase em novo checkpoint para teste real
+- [x] Derivar o filtro de meses da aba Lançamentos a partir das datas únicas das transações
+- [x] Adicionar testes para múltiplos meses e anos e validar a interface
+- [ ] Salvar e publicar a correção do filtro de meses
+- [x] Conectar a leitura das transações da aba Lançamentos ao Supabase com fallback local seguro
+- [x] Testar o filtro usando transações carregadas da fonte remota e confirmar todos os meses/anos
+- [x] Adicionar teste de integração da aba Lançamentos com múltiplos meses/anos vindos da resposta remota
+- [x] Validar explicitamente o fallback local quando a consulta remota estiver indisponível
 - [x] Mapear e documentar corretamente os campos disponíveis na tabela transacoes, incluindo limitações de categoria e observação
 - [x] Enviar todas as parcelas em uma única mutation para evitar gravação parcial
 - [x] Adicionar teste fiel da procedure transactions.create e do insert em lote
