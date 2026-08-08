@@ -154,7 +154,11 @@
 - [x] Salvar a integração Supabase em novo checkpoint para teste real
 - [x] Derivar o filtro de meses da aba Lançamentos a partir das datas únicas das transações
 - [x] Adicionar testes para múltiplos meses e anos e validar a interface
-- [ ] Salvar e publicar a correção do filtro de meses
+- [x] Salvar e publicar a correção do filtro de meses
+- [x] Restaurar a alimentação independente do gráfico da Visão Geral com dados remotos separados por tipo
+- [x] Substituir o filtro mensal de Lançamentos por campos De e Até com padrão do mês atual
+- [x] Atualizar testes e validar Visão Geral e Lançamentos sem interferência
+- [ ] Salvar e publicar a correção do gráfico e do intervalo de datas
 - [x] Conectar a leitura das transações da aba Lançamentos ao Supabase com fallback local seguro
 - [x] Testar o filtro usando transações carregadas da fonte remota e confirmar todos os meses/anos
 - [x] Adicionar teste de integração da aba Lançamentos com múltiplos meses/anos vindos da resposta remota

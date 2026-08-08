@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => cleanup());
 import React from "react";
-import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, resolveTransactions, TransactionsView } from "./Home";
+import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, resolveTransactions, TransactionsView, buildDashboardChartData } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -56,7 +56,7 @@ describe("Lançamentos com dados remotos", () => {
     { id: 3, descricao: "Lazer · Viagens", valor: 300, data: "2025-12-05", tipo: "despesa" as const, forma_pagamento: "Crédito", parcelas: 2, responsavel: "Danieli" },
   ];
 
-  it("exibe no select todos os meses e anos únicos das linhas remotas", () => {
+  it("exibe e aplica o intervalo de datas às linhas remotas", async () => {
     render(<TransactionsView
       transactions={resolveTransactions(remoteRows, [])}
       onDelete={vi.fn()}
@@ -67,10 +67,25 @@ describe("Lançamentos com dados remotos", () => {
       payments={["Pix", "Crédito"]}
     />);
 
-    const monthSelect = screen.getByRole("combobox", { name: "Filtrar por mês" });
-    expect(within(monthSelect).getByRole("option", { name: "Agosto 2026" })).toBeInTheDocument();
-    expect(within(monthSelect).getByRole("option", { name: "Julho 2026" })).toBeInTheDocument();
-    expect(within(monthSelect).getByRole("option", { name: "Dezembro 2025" })).toBeInTheDocument();
+    const fromInput = screen.getByLabelText("De");
+    const toInput = screen.getByLabelText("Até");
+    expect((fromInput as HTMLInputElement).value).toMatch(/^\d{4}-\d{2}-01$/);
+    expect((toInput as HTMLInputElement).value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(screen.queryByRole("combobox", { name: "Filtrar por mês" })).not.toBeInTheDocument();
+    expect(screen.getByText("Aluguel")).toBeInTheDocument();
+
+    await userEvent.clear(fromInput);
+    await userEvent.type(fromInput, "2026-07-01");
+    await userEvent.clear(toInput);
+    await userEvent.type(toInput, "2026-07-31");
+    expect(screen.getByText("Salário")).toBeInTheDocument();
+    expect(screen.queryByText("Aluguel")).not.toBeInTheDocument();
+  });
+
+  it("mantém a série do dashboard independente do intervalo da listagem", () => {
+    const series = buildDashboardChartData(resolveTransactions(remoteRows, []), "2026-08");
+    expect(series.find((item) => item.month === "jul")?.receita).toBe(200);
+    expect(series.find((item) => item.month === "ago")?.gastos).toBe(100);
   });
 
   it("usa os dados locais somente enquanto a resposta remota está indisponível", () => {

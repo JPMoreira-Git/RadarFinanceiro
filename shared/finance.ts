@@ -74,9 +74,12 @@ export function installmentDate(firstDate: string, index: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export function filterTransactions<T extends { date: string; category: string; responsible: string; payment: string }>(transactions: T[], options: { month?: string; category?: string; responsible?: string; payment?: string }) {
+export function filterTransactions<T extends { date: string; category: string; responsible: string; payment: string }>(transactions: T[], options: { month?: string; from?: string; to?: string; category?: string; responsible?: string; payment?: string }) {
+  const from = options.from ?? (options.month ? `${options.month}-01` : undefined);
+  const to = options.to ?? (options.month ? `${options.month}-31` : undefined);
   return transactions.filter((item) =>
-    (!options.month || item.date.startsWith(options.month)) &&
+    (!from || item.date >= from) &&
+    (!to || item.date <= to) &&
     (!options.category || options.category === "Todos" || item.category === options.category) &&
     (!options.responsible || options.responsible === "Todos" || item.responsible === options.responsible) &&
     (!options.payment || options.payment === "Todos" || item.payment === options.payment),
