@@ -118,11 +118,22 @@ export async function insertSupabaseTransactions(rows: SupabaseTransactionInsert
   return data ?? rows;
 }
 
-// Novas funções para Categorias e Subcategorias
+// Funções para Categorias e Subcategorias
 export async function listSupabaseCategories() {
   const { data, error } = await getSupabaseClient().from("categorias").select("*").order("nome");
   if (error) throw new Error(`Erro ao listar categorias: ${error.message}`);
   return data;
+}
+
+export async function insertSupabaseCategory(name: string) {
+  const { data, error } = await getSupabaseClient().from("categorias").insert([{ nome: name }]).select();
+  if (error) throw new Error(`Erro ao inserir categoria: ${error.message}`);
+  return data[0];
+}
+
+export async function deleteSupabaseCategory(id: string) {
+  const { error } = await getSupabaseClient().from("categorias").delete().eq("id", id);
+  if (error) throw new Error(`Erro ao excluir categoria: ${error.message}`);
 }
 
 export async function listSupabaseSubcategories() {
