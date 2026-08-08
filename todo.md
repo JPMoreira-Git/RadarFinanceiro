@@ -172,7 +172,10 @@
 - [x] Migrar o id de Transaction e os IDs de exclusão para string UUID
 - [x] Atualizar schemas Zod/tRPC, Supabase e frontend removendo Number/parseInt
 - [x] Atualizar testes e auditar conversões numéricas
-- [ ] Salvar e publicar a migração dos IDs para UUID string
+- [x] Salvar e publicar a migração dos IDs para UUID string
+- [ ] Inicializar Git e criar o commit inicial do projeto
+- [ ] Configurar o remoto e enviar o commit inicial ao GitHub
+- [ ] Confirmar o envio ao GitHub e registrar o resultado
 - [x] Corrigir a formatação do bloco final de todo.md para separar corretamente os itens da migração UUID
 - [x] Adicionar teste de UI do clique em excluir verificando o ID enviado à mutation
 - [x] Adicionar teste de integração do Home confirmando mutateAsync({ id }) no fluxo real
