@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TrpcContext } from "./_core/context";
 
-const { insertMock } = vi.hoisted(() => ({ insertMock: vi.fn() }));
+const { insertMock, deleteMock, deleteManyMock } = vi.hoisted(() => ({ insertMock: vi.fn(), deleteMock: vi.fn(), deleteManyMock: vi.fn() }));
 
 vi.mock("./supabase", async () => {
   const actual = await vi.importActual<typeof import("./supabase")>("./supabase");
-  return { ...actual, insertSupabaseTransactions: insertMock };
+  return { ...actual, insertSupabaseTransactions: insertMock, deleteSupabaseTransaction: deleteMock, deleteSupabaseTransactions: deleteManyMock };
 });
 
 import { appRouter } from "./routers";
@@ -69,6 +69,20 @@ describe("transactions.create", () => {
       expect.objectContaining({ descricao: "Lazer · Viagem · Reserva", parcelas: 2, data: "2026-08-07" }),
       expect.objectContaining({ descricao: "Lazer · Viagem · Reserva", parcelas: 2, data: "2026-09-07" }),
     ]);
+  });
+
+  it("exclui uma transação usando o ID recebido", async () => {
+    deleteMock.mockResolvedValueOnce(undefined);
+    const caller = appRouter.createCaller(createContext());
+    await caller.transactions.delete({ id: 42 });
+    expect(deleteMock).toHaveBeenCalledWith(42);
+  });
+
+  it("exclui todas as parcelas em uma única operação em lote", async () => {
+    deleteManyMock.mockResolvedValueOnce(undefined);
+    const caller = appRouter.createCaller(createContext());
+    await caller.transactions.deleteMany({ ids: [10, 11, 12] });
+    expect(deleteManyMock).toHaveBeenCalledWith([10, 11, 12]);
   });
 });
 

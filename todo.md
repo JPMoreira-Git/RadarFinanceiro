@@ -158,7 +158,17 @@
 - [x] Restaurar a alimentação independente do gráfico da Visão Geral com dados remotos separados por tipo
 - [x] Substituir o filtro mensal de Lançamentos por campos De e Até com padrão do mês atual
 - [x] Atualizar testes e validar Visão Geral e Lançamentos sem interferência
-- [ ] Salvar e publicar a correção do gráfico e do intervalo de datas
+- [x] Salvar e publicar a correção do gráfico e do intervalo de datas
+- [x] Corrigir exclusão remota por ID com cláusula eq e alerta de erro do Supabase
+- [x] Corrigir consulta e normalização das receitas/despesas usadas no gráfico da Visão Geral
+- [x] Atualizar testes e validar exclusão e gráfico
+- [ ] Salvar e publicar a correção de exclusão e leitura do gráfico
+- [x] Adicionar teste de UI do clique em excluir verificando o ID enviado à mutation
+- [x] Adicionar teste de integração do Home confirmando mutateAsync({ id }) no fluxo real
+- [x] Cobrir o componente Home com mutation tRPC mockada, clique em Excluir e ID correto
+- [x] Adicionar teste do erro de exclusão verificando window.alert e feedback visual
+- [x] Adicionar teste do fluxo real de erro confirmando alert e toast de erro
+- [x] Cobrir Home com mutation rejeitada, window.alert e toast.error
 - [x] Conectar a leitura das transações da aba Lançamentos ao Supabase com fallback local seguro
 - [x] Testar o filtro usando transações carregadas da fonte remota e confirmar todos os meses/anos
 - [x] Adicionar teste de integração da aba Lançamentos com múltiplos meses/anos vindos da resposta remota

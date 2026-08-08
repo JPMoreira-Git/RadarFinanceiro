@@ -75,18 +75,23 @@ type RemoteTransactionRow = {
   descricao: string;
   valor: number;
   data: string;
-  tipo: TransactionType;
+  tipo: string;
   forma_pagamento: string | null;
   parcelas: number | null;
   responsavel: string;
 };
 
+export function normalizeRemoteTransactionType(value: unknown): TransactionType {
+  const normalized = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return normalized === "receita" || normalized === "income" || normalized === "entrada" ? "receita" : "despesa";
+}
+
 export function mapSupabaseTransaction(row: RemoteTransactionRow): Transaction {
   const [category = "Outros", subcategory = "Geral", ...noteParts] = row.descricao.split(" · ");
   return {
-    id: row.id,
-    date: row.data,
-    type: row.tipo,
+    id: Number(row.id),
+    date: String(row.data).slice(0, 10),
+    type: normalizeRemoteTransactionType(row.tipo),
     amount: Number(row.valor),
     category,
     subcategory,
@@ -99,6 +104,24 @@ export function mapSupabaseTransaction(row: RemoteTransactionRow): Transaction {
 
 export function resolveTransactions(remoteRows: RemoteTransactionRow[] | undefined, localTransactions: Transaction[]) {
   return remoteRows === undefined ? localTransactions : remoteRows.map(mapSupabaseTransaction);
+}
+
+export function handleDeleteError(error: unknown) {
+  const message = error instanceof Error ? error.message : "Não foi possível excluir o lançamento.";
+  window.alert(message);
+  toast.error(message);
+  return message;
+}
+
+export async function deleteTransactionRemotely(id: number, mutation: { mutateAsync: (input: { id: number }) => Promise<unknown> }, onSuccess: () => void, refetch: () => Promise<unknown>) {
+  try {
+    await mutation.mutateAsync({ id });
+    onSuccess();
+    await refetch();
+    toast.success("Lançamento removido.");
+  } catch (error) {
+    handleDeleteError(error);
+  }
 }
 
 export function transactionMonthOptions(transactions: Transaction[]) {
@@ -351,6 +374,8 @@ export default function Home() {
   const [categoriesData, setCategoriesData] = usePersistentState<Record<string, string[]>>("fluxo:categories", { ...categories });
   const [payments, setPayments] = usePersistentState<string[]>("fluxo:payments", ["Conta conjunta", "Cartão principal", "Conta investimentos", "Débito automático"]);
   const createTransactions = trpc.transactions.create.useMutation();
+  const deleteTransactionMutation = trpc.transactions.delete.useMutation();
+  const deleteTransactionsMutation = trpc.transactions.deleteMany.useMutation();
   const addTransactions = async (newTransactions: Transaction[]) => {
     await createTransactions.mutateAsync({
       transactions: newTransactions.map((transaction) => ({
@@ -381,8 +406,19 @@ export default function Home() {
   const removePayment = (name: string) => setPayments((current) => current.filter((item) => item !== name));
   const updateTransaction = (transaction: Transaction) => setTransactions((current) => current.map((item) => item.id === transaction.id ? transaction : item));
   const updateTransactionGroup = (groupId: string, total: number, note: string, payment: string) => setTransactions((current) => { const group = current.filter((item) => item.installmentGroupId === groupId).sort((a, b) => (a.installmentNumber ?? 0) - (b.installmentNumber ?? 0)); const values = splitInstallments(total, group.length); return current.map((item) => { const index = group.findIndex((entry) => entry.id === item.id); return index >= 0 ? { ...item, amount: values[index], note: note ? `Parcela ${index + 1}/${group.length} · ${note}` : `Parcela ${index + 1}/${group.length}`, payment } : item; }); });
-  const deleteTransaction = (id: number) => { setTransactions((current) => current.filter((item) => item.id !== id)); toast.success("Lançamento removido."); };
-  const deleteTransactionGroup = (groupId: string) => { setTransactions((current) => current.filter((item) => item.installmentGroupId !== groupId)); toast.success("Compra parcelada removida."); };
+  const deleteTransaction = (id: number) => deleteTransactionRemotely(id, deleteTransactionMutation, () => setTransactions((current) => current.filter((item) => item.id !== id)), remoteTransactionsQuery.refetch);
+  const deleteTransactionGroup = async (groupId: string) => {
+    const ids = transactions.filter((item) => item.installmentGroupId === groupId).map((item) => item.id).filter((id) => id > 0);
+    try {
+      if (ids.length === 0) throw new Error("Nenhuma parcela válida para excluir.");
+      await deleteTransactionsMutation.mutateAsync({ ids });
+      setTransactions((current) => current.filter((item) => item.installmentGroupId !== groupId));
+      await remoteTransactionsQuery.refetch();
+      toast.success("Compra parcelada removida.");
+    } catch (error) {
+      handleDeleteError(error);
+    }
+  };
   const view = useMemo(() => location === "/lancamentos" ? "transactions" : location === "/novo" ? "new" : location === "/configuracoes" ? "settings" : "dashboard", [location]);
   return <><div className="min-h-screen">{view === "dashboard" && <DashboardView transactions={transactions} selectedMonth={dashboardMonth} onMonthChange={setDashboardMonth} />}{view === "transactions" && <TransactionsView transactions={transactions} onDelete={deleteTransaction} onDeleteGroup={deleteTransactionGroup} onUpdate={updateTransaction} onUpdateGroup={updateTransactionGroup} categoriesData={categoriesData} payments={payments} />}{view === "new" && <NewTransaction onAdd={addTransactions} categoriesData={categoriesData} payments={payments} />}{view === "settings" && <SettingsView categoriesData={categoriesData} onAddCategory={addCategory} onAddSubcategory={addSubcategory} onRenameCategory={renameCategory} onRenameSubcategory={renameSubcategory} onRemoveCategory={removeCategory} onRemoveSubcategory={removeSubcategory} onReorderCategory={reorderCategory} onReorderSubcategory={reorderSubcategory} payments={payments} onAddPayment={addPayment} onRemovePayment={removePayment} />}</div><MobileNav location={location} setLocation={setLocation} /></>;
 }

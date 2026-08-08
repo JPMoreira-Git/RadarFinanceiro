@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => cleanup());
 import React from "react";
-import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, resolveTransactions, TransactionsView, buildDashboardChartData } from "./Home";
+import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, normalizeRemoteTransactionType, resolveTransactions, handleDeleteError, deleteTransactionRemotely, TransactionsView, buildDashboardChartData } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -25,6 +25,12 @@ function DashboardHarness({ transactions }: { transactions: React.ComponentProps
 }
 
 describe("Supabase transaction loading", () => {
+  it("normaliza tipos e valores remotos para o formato do gráfico", () => {
+    expect(normalizeRemoteTransactionType("income")).toBe("receita");
+    expect(normalizeRemoteTransactionType("DESPESA")).toBe("despesa");
+    expect(mapSupabaseTransaction({ id: 9, descricao: "Receitas · Salário", valor: "1250.50" as unknown as number, data: "2026-08-31T12:00:00Z", tipo: "income", forma_pagamento: null, parcelas: null, responsavel: "João Paulo" })).toMatchObject({ id: 9, amount: 1250.5, date: "2026-08-31", type: "receita" });
+  });
+
   it("normaliza uma linha remota preservando a data usada pelo filtro mensal", () => {
     const transaction = mapSupabaseTransaction({
       id: 22,
@@ -80,6 +86,33 @@ describe("Lançamentos com dados remotos", () => {
     await userEvent.type(toInput, "2026-07-31");
     expect(screen.getByText("Salário")).toBeInTheDocument();
     expect(screen.queryByText("Aluguel")).not.toBeInTheDocument();
+  });
+
+  it("envia o ID correto ao clicar no botão de excluir", async () => {
+    const onDelete = vi.fn();
+    render(<TransactionsView transactions={resolveTransactions(remoteRows, [])} onDelete={onDelete} onDeleteGroup={vi.fn()} onUpdate={vi.fn()} onUpdateGroup={vi.fn()} categoriesData={categories} payments={["Pix", "Crédito"]} />);
+    await userEvent.click(screen.getAllByRole("button", { name: "Excluir" })[0]);
+    expect(onDelete).toHaveBeenCalledWith(1);
+  });
+
+  it("envia o ID ao mutateAsync no fluxo remoto usado pelo Home", async () => {
+    const mutateAsync = vi.fn().mockResolvedValue({});
+    const onSuccess = vi.fn();
+    const refetch = vi.fn().mockResolvedValue({});
+    await deleteTransactionRemotely(1, { mutateAsync }, onSuccess, refetch);
+    expect(mutateAsync).toHaveBeenCalledWith({ id: 1 });
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("exibe alert e toast quando o fluxo remoto retorna erro", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => undefined);
+    const mutateAsync = vi.fn().mockRejectedValue(new Error("Falha do Supabase"));
+    const refetch = vi.fn();
+    await deleteTransactionRemotely(1, { mutateAsync }, vi.fn(), refetch);
+    expect(alertSpy).toHaveBeenCalledWith("Falha do Supabase");
+    expect(refetch).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
   });
 
   it("mantém a série do dashboard independente do intervalo da listagem", () => {
