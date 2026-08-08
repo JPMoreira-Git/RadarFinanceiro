@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => cleanup());
 import React from "react";
-import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, normalizeRemoteTransactionType, resolveTransactions, handleDeleteError, deleteTransactionRemotely, TransactionsView, buildDashboardChartData } from "./Home";
+import { buildIncomeExpenseWaterfall, buildInvestmentExpenseWaterfall, DashboardView, DivergingBalanceCard, divergingBarY, financialChartBarY, financialChartLineY, financialChartY, FinancialRhythmChart, lineLabelOffsets, NewTransaction, percentageChange, transactionMonthOptions, mapSupabaseTransaction, normalizeRemoteTransactionType, resolveTransactions, handleDeleteError, deleteTransactionRemotely, deleteTransactionsRemotely, TransactionsView, buildDashboardChartData } from "./Home";
 
 class ResizeObserverMock {
   observe() {}
@@ -101,6 +101,16 @@ describe("Lançamentos com dados remotos", () => {
     const refetch = vi.fn().mockResolvedValue({});
     await deleteTransactionRemotely(1, { mutateAsync }, onSuccess, refetch);
     expect(mutateAsync).toHaveBeenCalledWith({ id: 1 });
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("envia todos os IDs ao excluir um grupo de parcelas", async () => {
+    const mutateAsync = vi.fn().mockResolvedValue({});
+    const onSuccess = vi.fn();
+    const refetch = vi.fn().mockResolvedValue({});
+    await deleteTransactionsRemotely([10, 11, 12], { mutateAsync }, onSuccess, refetch);
+    expect(mutateAsync).toHaveBeenCalledWith({ ids: [10, 11, 12] });
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(refetch).toHaveBeenCalledTimes(1);
   });

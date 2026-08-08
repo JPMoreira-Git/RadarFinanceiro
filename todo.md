@@ -162,7 +162,12 @@
 - [x] Corrigir exclusão remota por ID com cláusula eq e alerta de erro do Supabase
 - [x] Corrigir consulta e normalização das receitas/despesas usadas no gráfico da Visão Geral
 - [x] Atualizar testes e validar exclusão e gráfico
-- [ ] Salvar e publicar a correção de exclusão e leitura do gráfico
+- [x] Salvar e publicar a correção de exclusão e leitura do gráfico
+- [x] Fazer delete individual via mutation/backend antes de setTransactions
+- [x] Fazer delete do grupo de parcelas via mutation/backend antes de setTransactions
+- [x] Garantir toast.error e preservação da tela quando a exclusão falhar
+- [x] Atualizar testes e validar a correção das exclusões
+- [ ] Salvar e publicar a correção das exclusões em novo checkpoint
 - [x] Adicionar teste de UI do clique em excluir verificando o ID enviado à mutation
 - [x] Adicionar teste de integração do Home confirmando mutateAsync({ id }) no fluxo real
 - [x] Cobrir o componente Home com mutation tRPC mockada, clique em Excluir e ID correto
