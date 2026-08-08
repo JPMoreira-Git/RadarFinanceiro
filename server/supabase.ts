@@ -24,58 +24,71 @@ export type SupabaseTransactionInput = {
   responsible: string;
   payment: string | null;
   note: string | null;
-  installmentCount?: number;
+  installmentGroupId?: string | null;
+  installmentNumber?: number | null;
+  installmentCount?: number | null;
+  subcategoria_id?: string | null;
 };
 
 export type SupabaseTransactionInsert = {
-  descricao: string;
+  descricao: string | null;
   valor: number;
   data: string;
   tipo: "receita" | "despesa";
   categoria_id: string | null;
+  subcategoria_id: string | null;
   forma_pagamento: string | null;
   parcelas: number;
+  parcela_atual: number | null;
+  grupo_parcela_id: string | null;
   responsavel: string;
 };
 
 export function toSupabaseTransactionRow(transaction: SupabaseTransactionInput): SupabaseTransactionInsert {
   return {
-    descricao: [transaction.category, transaction.subcategory, transaction.note].filter(Boolean).join(" · "),
+    descricao: transaction.note || null,
     valor: transaction.amount,
     data: transaction.date,
     tipo: transaction.type,
-    categoria_id: null,
+    categoria_id: null, // Ainda não temos o ID da categoria no input, será preenchido se necessário ou via subcategoria
+    subcategoria_id: transaction.subcategoria_id || null,
     forma_pagamento: transaction.payment,
     parcelas: transaction.installmentCount ?? 1,
+    parcela_atual: transaction.installmentNumber ?? 1,
+    grupo_parcela_id: transaction.installmentGroupId || null,
     responsavel: transaction.responsible,
   };
 }
 
 export type SupabaseTransactionRow = {
   id: string;
-  descricao: string;
+  descricao: string | null;
   valor: number;
   data: string;
   tipo: "receita" | "despesa";
   forma_pagamento: string | null;
   parcelas: number | null;
+  parcela_atual: number | null;
+  grupo_parcela_id: string | null;
   responsavel: string;
+  subcategoria_id: string | null;
+  categorias?: { nome: string } | null;
+  subcategorias?: { nome: string } | null;
 };
 
 export async function listSupabaseTransactions(): Promise<SupabaseTransactionRow[]> {
   const { data, error } = await getSupabaseClient()
     .from("transacoes")
-    .select("id, descricao, valor, data, tipo, forma_pagamento, parcelas, responsavel")
+    .select("*, categorias(nome), subcategorias(nome)")
     .order("data", { ascending: false });
   if (error) {
     throw new Error(`Não foi possível carregar as transações do Supabase: ${error.message}`);
   }
-  return (data ?? []).map((row) => ({
-    ...(row as SupabaseTransactionRow),
-    id: (row as SupabaseTransactionRow).id,
-    valor: Number((row as SupabaseTransactionRow).valor),
-    data: String((row as SupabaseTransactionRow).data).slice(0, 10),
-    tipo: normalizeSupabaseType((row as SupabaseTransactionRow).tipo),
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    valor: Number(row.valor),
+    data: String(row.data).slice(0, 10),
+    tipo: normalizeSupabaseType(row.tipo),
   }));
 }
 
@@ -103,4 +116,28 @@ export async function insertSupabaseTransactions(rows: SupabaseTransactionInsert
     throw new Error(`Não foi possível salvar no Supabase: ${error.message}`);
   }
   return data ?? rows;
+}
+
+// Novas funções para Categorias e Subcategorias
+export async function listSupabaseCategories() {
+  const { data, error } = await getSupabaseClient().from("categorias").select("*").order("nome");
+  if (error) throw new Error(`Erro ao listar categorias: ${error.message}`);
+  return data;
+}
+
+export async function listSupabaseSubcategories() {
+  const { data, error } = await getSupabaseClient().from("subcategorias").select("*").order("nome");
+  if (error) throw new Error(`Erro ao listar subcategorias: ${error.message}`);
+  return data;
+}
+
+export async function insertSupabaseSubcategory(name: string, categoryId: string) {
+  const { data, error } = await getSupabaseClient().from("subcategorias").insert([{ nome: name, categoria_id: categoryId }]).select();
+  if (error) throw new Error(`Erro ao inserir subcategoria: ${error.message}`);
+  return data[0];
+}
+
+export async function deleteSupabaseSubcategory(id: string) {
+  const { error } = await getSupabaseClient().from("subcategorias").delete().eq("id", id);
+  if (error) throw new Error(`Erro ao excluir subcategoria: ${error.message}`);
 }

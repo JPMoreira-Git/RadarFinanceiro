@@ -29,6 +29,7 @@ export type InstallmentTransactionInput = {
   amount: number;
   category: string;
   subcategory: string;
+  subcategoria_id?: string | null;
   responsible: string;
   payment: string;
   note: string;
@@ -55,16 +56,19 @@ export function splitInstallments(total: number, count: number) {
 export function buildInstallmentTransactions(input: InstallmentTransactionInput): InstallmentTransactionOutput[] {
   const count = normalizeInstallments(input.installments, input.payment);
   const values = splitInstallments(input.amount, count);
-  const groupId = count > 1 ? `parcelado-${input.idSeed}` : undefined;
+  // Gerar um grupo_parcela_id único se for parcelado
+  const groupId = count > 1 ? `grp-${input.idSeed}-${Math.random().toString(36).slice(2, 7)}` : undefined;
+  
   return values.map((amount, index) => ({
     ...input,
     id: `${input.idSeed}-${index}`,
     date: installmentDate(input.date, index),
     amount,
-    note: count > 1 ? `Parcela ${index + 1}/${count}${input.note ? ` · ${input.note}` : ""}` : input.note,
+    // Descrição deve salvar APENAS os detalhes da compra (note)
+    note: input.note, 
     installmentGroupId: groupId,
-    installmentNumber: count > 1 ? index + 1 : undefined,
-    installmentCount: count > 1 ? count : undefined,
+    installmentNumber: count > 1 ? index + 1 : 1,
+    installmentCount: count > 1 ? count : 1,
   }));
 }
 

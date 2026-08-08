@@ -32,6 +32,7 @@ describe("transactions.create", () => {
   it("maps and inserts all installments in one Supabase batch", async () => {
     insertMock.mockResolvedValueOnce([{ id: "supabase-1" }, { id: "supabase-2" }]);
     const caller = appRouter.createCaller(createContext());
+    const validUuid = "11111111-1111-4111-8111-111111111111";
 
     await caller.transactions.create({
       transactions: [
@@ -41,6 +42,7 @@ describe("transactions.create", () => {
           amount: 100,
           category: "Lazer",
           subcategory: "Viagem",
+          subcategoria_id: validUuid,
           responsible: "Ambos",
           payment: "Crédito",
           note: "Reserva",
@@ -54,6 +56,7 @@ describe("transactions.create", () => {
           amount: 100,
           category: "Lazer",
           subcategory: "Viagem",
+          subcategoria_id: validUuid,
           responsible: "Ambos",
           payment: "Crédito",
           note: "Reserva",
@@ -66,8 +69,8 @@ describe("transactions.create", () => {
 
     expect(insertMock).toHaveBeenCalledTimes(1);
     expect(insertMock).toHaveBeenCalledWith([
-      expect.objectContaining({ descricao: "Lazer · Viagem · Reserva", parcelas: 2, data: "2026-08-07" }),
-      expect.objectContaining({ descricao: "Lazer · Viagem · Reserva", parcelas: 2, data: "2026-09-07" }),
+      expect.objectContaining({ descricao: "Reserva", parcelas: 2, parcela_atual: 1, subcategoria_id: validUuid, data: "2026-08-07" }),
+      expect.objectContaining({ descricao: "Reserva", parcelas: 2, parcela_atual: 2, subcategoria_id: validUuid, data: "2026-09-07" }),
     ]);
   });
 

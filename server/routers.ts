@@ -3,10 +3,19 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { deleteSupabaseTransaction, deleteSupabaseTransactions, insertSupabaseTransactions, listSupabaseTransactions, toSupabaseTransactionRow } from "./supabase";
+import { 
+  deleteSupabaseTransaction, 
+  deleteSupabaseTransactions, 
+  insertSupabaseTransactions, 
+  listSupabaseTransactions, 
+  toSupabaseTransactionRow,
+  listSupabaseCategories,
+  listSupabaseSubcategories,
+  insertSupabaseSubcategory,
+  deleteSupabaseSubcategory
+} from "./supabase";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -17,6 +26,22 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  categories: router({
+    list: protectedProcedure.query(async () => listSupabaseCategories()),
+    listSubcategories: protectedProcedure.query(async () => listSupabaseSubcategories()),
+    createSubcategory: protectedProcedure
+      .input(z.object({ name: z.string().min(1), categoryId: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        return insertSupabaseSubcategory(input.name, input.categoryId);
+      }),
+    deleteSubcategory: protectedProcedure
+      .input(z.object({ id: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        await deleteSupabaseSubcategory(input.id);
+        return { success: true } as const;
+      }),
   }),
 
   transactions: router({
@@ -41,10 +66,11 @@ export const appRouter = router({
           amount: z.number().positive(),
           category: z.string().min(1),
           subcategory: z.string().min(1),
+          subcategoria_id: z.string().uuid().nullable().optional(),
           responsible: z.string().min(1),
           payment: z.string().nullable(),
           note: z.string().nullable(),
-          installmentGroupId: z.string().nullable(),
+          installmentGroupId: z.string().nullable().optional(),
           installmentNumber: z.number().int().positive().optional(),
           installmentCount: z.number().int().positive().optional(),
         })),
