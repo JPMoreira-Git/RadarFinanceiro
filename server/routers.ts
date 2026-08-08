@@ -10,6 +10,8 @@ import {
   listSupabaseTransactions, 
   toSupabaseTransactionRow,
   listSupabaseCategories,
+  insertSupabaseCategory,
+  deleteSupabaseCategory,
   listSupabaseSubcategories,
   insertSupabaseSubcategory,
   deleteSupabaseSubcategory
@@ -30,6 +32,17 @@ export const appRouter = router({
 
   categories: router({
     list: protectedProcedure.query(async () => listSupabaseCategories()),
+    create: protectedProcedure
+      .input(z.object({ name: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        return insertSupabaseCategory(input.name);
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        await deleteSupabaseCategory(input.id);
+        return { success: true } as const;
+      }),
     listSubcategories: protectedProcedure.query(async () => listSupabaseSubcategories()),
     createSubcategory: protectedProcedure
       .input(z.object({ name: z.string().min(1), categoryId: z.string().uuid() }))
