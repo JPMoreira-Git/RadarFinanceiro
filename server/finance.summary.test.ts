@@ -82,14 +82,14 @@ describe("filters and monthly aggregation", () => {
 
 describe("transaction deletion scope", () => {
   const group = [
-    { id: 1, installmentGroupId: "g1" },
-    { id: 2, installmentGroupId: "g1" },
-    { id: 3 },
+    { id: "66666666-6666-4666-8666-666666666666", installmentGroupId: "g1" },
+    { id: "77777777-7777-4777-8777-777777777777", installmentGroupId: "g1" },
+    { id: "88888888-8888-4888-8888-888888888888" },
   ];
 
   it("removes only the selected installment or the full group", () => {
-    expect(removeTransactionScope(group, group[0]!, "item").map((item) => item.id)).toEqual([2, 3]);
-    expect(removeTransactionScope(group, group[0]!, "group").map((item) => item.id)).toEqual([3]);
+    expect(removeTransactionScope(group, group[0]!, "item").map((item) => item.id)).toEqual(["77777777-7777-4777-8777-777777777777", "88888888-8888-4888-8888-888888888888"]);
+    expect(removeTransactionScope(group, group[0]!, "group").map((item) => item.id)).toEqual(["88888888-8888-4888-8888-888888888888"]);
   });
 });
 

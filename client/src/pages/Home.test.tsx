@@ -28,12 +28,12 @@ describe("Supabase transaction loading", () => {
   it("normaliza tipos e valores remotos para o formato do gráfico", () => {
     expect(normalizeRemoteTransactionType("income")).toBe("receita");
     expect(normalizeRemoteTransactionType("DESPESA")).toBe("despesa");
-    expect(mapSupabaseTransaction({ id: 9, descricao: "Receitas · Salário", valor: "1250.50" as unknown as number, data: "2026-08-31T12:00:00Z", tipo: "income", forma_pagamento: null, parcelas: null, responsavel: "João Paulo" })).toMatchObject({ id: 9, amount: 1250.5, date: "2026-08-31", type: "receita" });
+    expect(mapSupabaseTransaction({ id: "test-9", descricao: "Receitas · Salário", valor: "1250.50" as unknown as number, data: "2026-08-31T12:00:00Z", tipo: "income", forma_pagamento: null, parcelas: null, responsavel: "João Paulo" })).toMatchObject({ id: "test-9", amount: 1250.5, date: "2026-08-31", type: "receita" });
   });
 
   it("normaliza uma linha remota preservando a data usada pelo filtro mensal", () => {
     const transaction = mapSupabaseTransaction({
-      id: 22,
+      id: "test-22",
       descricao: "Moradia · Aluguel · Parcela remota",
       valor: 780,
       data: "2025-11-14",
@@ -44,7 +44,7 @@ describe("Supabase transaction loading", () => {
     });
 
     expect(transaction).toMatchObject({
-      id: 22,
+      id: "test-22",
       date: "2025-11-14",
       category: "Moradia",
       subcategory: "Aluguel",
@@ -57,9 +57,9 @@ describe("Supabase transaction loading", () => {
 
 describe("Lançamentos com dados remotos", () => {
   const remoteRows = [
-    { id: 1, descricao: "Moradia · Aluguel", valor: 100, data: "2026-08-05", tipo: "despesa" as const, forma_pagamento: "Pix", parcelas: 1, responsavel: "Ambos" },
-    { id: 2, descricao: "Receitas · Salário", valor: 200, data: "2026-07-05", tipo: "receita" as const, forma_pagamento: null, parcelas: 1, responsavel: "João Paulo" },
-    { id: 3, descricao: "Lazer · Viagens", valor: 300, data: "2025-12-05", tipo: "despesa" as const, forma_pagamento: "Crédito", parcelas: 2, responsavel: "Danieli" },
+    { id: "test-1", descricao: "Moradia · Aluguel", valor: 100, data: "2026-08-05", tipo: "despesa" as const, forma_pagamento: "Pix", parcelas: 1, responsavel: "Ambos" },
+    { id: "test-2", descricao: "Receitas · Salário", valor: 200, data: "2026-07-05", tipo: "receita" as const, forma_pagamento: null, parcelas: 1, responsavel: "João Paulo" },
+    { id: "test-3", descricao: "Lazer · Viagens", valor: 300, data: "2025-12-05", tipo: "despesa" as const, forma_pagamento: "Crédito", parcelas: 2, responsavel: "Danieli" },
   ];
 
   it("exibe e aplica o intervalo de datas às linhas remotas", async () => {
@@ -92,15 +92,15 @@ describe("Lançamentos com dados remotos", () => {
     const onDelete = vi.fn();
     render(<TransactionsView transactions={resolveTransactions(remoteRows, [])} onDelete={onDelete} onDeleteGroup={vi.fn()} onUpdate={vi.fn()} onUpdateGroup={vi.fn()} categoriesData={categories} payments={["Pix", "Crédito"]} />);
     await userEvent.click(screen.getAllByRole("button", { name: "Excluir" })[0]);
-    expect(onDelete).toHaveBeenCalledWith(1);
+    expect(onDelete).toHaveBeenCalledWith("test-1");
   });
 
   it("envia o ID ao mutateAsync no fluxo remoto usado pelo Home", async () => {
     const mutateAsync = vi.fn().mockResolvedValue({});
     const onSuccess = vi.fn();
     const refetch = vi.fn().mockResolvedValue({});
-    await deleteTransactionRemotely(1, { mutateAsync }, onSuccess, refetch);
-    expect(mutateAsync).toHaveBeenCalledWith({ id: 1 });
+    await deleteTransactionRemotely("test-1", { mutateAsync }, onSuccess, refetch);
+    expect(mutateAsync).toHaveBeenCalledWith({ id: "test-1" });
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(refetch).toHaveBeenCalledTimes(1);
   });
@@ -109,8 +109,8 @@ describe("Lançamentos com dados remotos", () => {
     const mutateAsync = vi.fn().mockResolvedValue({});
     const onSuccess = vi.fn();
     const refetch = vi.fn().mockResolvedValue({});
-    await deleteTransactionsRemotely([10, 11, 12], { mutateAsync }, onSuccess, refetch);
-    expect(mutateAsync).toHaveBeenCalledWith({ ids: [10, 11, 12] });
+    await deleteTransactionsRemotely(["test-10", "test-11", "test-12"], { mutateAsync }, onSuccess, refetch);
+    expect(mutateAsync).toHaveBeenCalledWith({ ids: ["test-10", "test-11", "test-12"] });
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(refetch).toHaveBeenCalledTimes(1);
   });
@@ -119,7 +119,7 @@ describe("Lançamentos com dados remotos", () => {
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => undefined);
     const mutateAsync = vi.fn().mockRejectedValue(new Error("Falha do Supabase"));
     const refetch = vi.fn();
-    await deleteTransactionRemotely(1, { mutateAsync }, vi.fn(), refetch);
+    await deleteTransactionRemotely("test-1", { mutateAsync }, vi.fn(), refetch);
     expect(alertSpy).toHaveBeenCalledWith("Falha do Supabase");
     expect(refetch).not.toHaveBeenCalled();
     alertSpy.mockRestore();
@@ -132,7 +132,7 @@ describe("Lançamentos com dados remotos", () => {
   });
 
   it("usa os dados locais somente enquanto a resposta remota está indisponível", () => {
-    const local = [{ id: 9, date: "2024-01-05", type: "despesa" as const, amount: 10, category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Pix", note: "" }];
+    const local = [{ id: "test-9", date: "2024-01-05", type: "despesa" as const, amount: 10, category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Pix", note: "" }];
     expect(resolveTransactions(undefined, local)).toBe(local);
     expect(resolveTransactions([], local)).toEqual([]);
   });
@@ -141,11 +141,11 @@ describe("Lançamentos com dados remotos", () => {
 describe("transactionMonthOptions", () => {
   it("deriva meses e anos únicos das datas das transações em ordem decrescente", () => {
     const options = transactionMonthOptions([
-      { id: 1, date: "2026-07-05", type: "despesa", amount: 10, category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Pix", note: "" },
-      { id: 2, date: "2026-08-01", type: "receita", amount: 20, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "", note: "" },
-      { id: 3, date: "2025-12-15", type: "despesa", amount: 30, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
-      { id: 4, date: "2026-07-22", type: "despesa", amount: 40, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
-      { id: 5, date: "data inválida", type: "despesa", amount: 50, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
+      { id: "test-1", date: "2026-07-05", type: "despesa", amount: 10, category: "Moradia", subcategory: "Aluguel", responsible: "Ambos", payment: "Pix", note: "" },
+      { id: "test-2", date: "2026-08-01", type: "receita", amount: 20, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "", note: "" },
+      { id: "test-3", date: "2025-12-15", type: "despesa", amount: 30, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
+      { id: "test-4", date: "2026-07-22", type: "despesa", amount: 40, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
+      { id: "test-5", date: "data inválida", type: "despesa", amount: 50, category: "Lazer", subcategory: "Viagens", responsible: "Danieli", payment: "Crédito", note: "" },
     ]);
 
     expect(options).toEqual([
@@ -164,9 +164,9 @@ describe("InvestmentExpenseWaterfall", () => {
   });
   it("calcula o saldo mensal e a soma acumulada depois de agosto", () => {
     const steps = buildInvestmentExpenseWaterfall([
-      { id: 1, date: "2026-01-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },
-      { id: 2, date: "2026-02-05", type: "despesa", amount: 50, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
-      { id: 3, date: "2026-03-05", type: "receita", amount: 150, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },
+      { id: "test-1", date: "2026-01-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },
+      { id: "test-2", date: "2026-02-05", type: "despesa", amount: 50, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-3", date: "2026-03-05", type: "receita", amount: 150, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "" },
     ]);
     expect(steps.slice(0, 3).map(({ label, value }) => ({ label, value }))).toEqual([{ label: "Jan", value: 100 }, { label: "Fev", value: -50 }, { label: "Mar", value: 150 }]);
     expect(steps.at(-1)).toMatchObject({ label: "Acumulado", value: 200, isTotal: true });
@@ -210,10 +210,10 @@ describe("DashboardView", () => {
 
   it("calcula Renda Total menos Despesas com todas as receitas do mês", () => {
     const steps = buildIncomeExpenseWaterfall([
-      { id: 1, date: "2026-01-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-01-10", type: "receita", amount: 40, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "Danieli", payment: "Conta investimentos", note: "" },
-      { id: 3, date: "2026-01-20", type: "despesa", amount: 80, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
-      { id: 4, date: "2026-02-05", type: "despesa", amount: 50, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-01-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-01-10", type: "receita", amount: 40, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "Danieli", payment: "Conta investimentos", note: "" },
+      { id: "test-3", date: "2026-01-20", type: "despesa", amount: 80, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-4", date: "2026-02-05", type: "despesa", amount: 50, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
     ]);
     expect(steps.slice(0, 2).map(({ label, value }) => ({ label, value }))).toEqual([{ label: "Jan", value: 60 }, { label: "Fev", value: -50 }]);
     expect(steps.at(-1)).toMatchObject({ label: "Acumulado", value: 10, isTotal: true });
@@ -221,8 +221,8 @@ describe("DashboardView", () => {
 
   it("usa o título Renda Total x Despesas e rótulos gráficos sem R$ ou sinais", () => {
     const { container } = render(<DashboardView selectedMonth="2026-08" transactions={[
-      { id: 1, date: "2026-08-05", type: "receita", amount: 7400, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-08-06", type: "despesa", amount: 1000, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "receita", amount: 7400, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-08-06", type: "despesa", amount: 1000, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     const view = within(container);
     expect(view.getByText("Renda Total x Despesas")).toBeInTheDocument();
@@ -247,30 +247,30 @@ describe("DashboardView", () => {
 
   it("exibe a porcentagem de despesas em relação a julho", () => {
     render(<DashboardView transactions={[
-      { id: 1, date: "2026-08-05", type: "despesa", amount: 966.1, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" },
-      { id: 2, date: "2026-07-05", type: "despesa", amount: 3020, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "despesa", amount: 966.1, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" },
+      { id: "test-2", date: "2026-07-05", type: "despesa", amount: 3020, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getByText("−68,0% em relação a julho")).toBeInTheDocument();
   });
 
   it("exibe a porcentagem de receitas em relação a julho", () => {
     render(<DashboardView transactions={[
-      { id: 1, date: "2026-08-05", type: "receita", amount: 10840, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-07-05", type: "receita", amount: 10480, category: "Receitas", subcategory: "Salário", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "receita", amount: 10840, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-07-05", type: "receita", amount: 10480, category: "Receitas", subcategory: "Salário", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getByText("+3,4% em relação a julho")).toBeInTheDocument();
   });
 
   it("usa verde para queda das despesas e vermelho para aumento", () => {
     const { rerender } = render(<DashboardView transactions={[
-      { id: 1, date: "2026-08-05", type: "despesa", amount: 100, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-07-05", type: "despesa", amount: 200, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "despesa", amount: 100, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-07-05", type: "despesa", amount: 200, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getByText("−50,0% em relação a julho")).toHaveClass("text-[#297059]");
 
     rerender(<DashboardView transactions={[
-      { id: 1, date: "2026-08-05", type: "despesa", amount: 300, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-07-05", type: "despesa", amount: 200, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "despesa", amount: 300, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-07-05", type: "despesa", amount: 200, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getByText("+50,0% em relação a julho")).toHaveClass("text-[#a55348]");
   });
@@ -279,8 +279,8 @@ describe("DashboardView", () => {
     const onMonthChange = vi.fn();
     const user = userEvent.setup();
     render(<DashboardView selectedMonth="2026-08" onMonthChange={onMonthChange} transactions={[
-      { id: 1, date: "2026-08-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-07-05", type: "despesa", amount: 50, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "receita", amount: 100, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-07-05", type: "despesa", amount: 50, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     const julyButtons = screen.getAllByRole("button", { name: /Selecionar julho/i });
     await user.click(julyButtons[julyButtons.length - 1]);
@@ -290,9 +290,9 @@ describe("DashboardView", () => {
   it("atualiza os cards e a atividade ao trocar para julho", async () => {
     const user = userEvent.setup();
     render(<DashboardHarness transactions={[
-      { id: 1, date: "2026-08-05", type: "receita", amount: 10840, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 2, date: "2026-07-25", type: "receita", amount: 10480, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-      { id: 3, date: "2026-07-20", type: "despesa", amount: 3020, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-08-05", type: "receita", amount: 10840, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-2", date: "2026-07-25", type: "receita", amount: 10480, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+      { id: "test-3", date: "2026-07-20", type: "despesa", amount: 3020, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getAllByText("R$ 10.840,00").length).toBeGreaterThan(0);
     const julyButtons = screen.getAllByRole("button", { name: /Selecionar julho/i });
@@ -303,15 +303,15 @@ describe("DashboardView", () => {
 
   it("usa o mês mais recente dos lançamentos como referência do dashboard", () => {
     render(<DashboardView transactions={[
-      { id: 1, date: "2026-09-05", type: "despesa", amount: 120, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" },
-      { id: 2, date: "2026-08-05", type: "despesa", amount: 300, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
+      { id: "test-1", date: "2026-09-05", type: "despesa", amount: 120, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" },
+      { id: "test-2", date: "2026-08-05", type: "despesa", amount: 300, category: "Moradia", subcategory: "Aluguel", responsible: "Danieli", payment: "Conta conjunta", note: "" },
     ]} />);
     expect(screen.getByText("setembro 2026")).toBeInTheDocument();
     expect(screen.getByText("−60,0% em relação a agosto")).toBeInTheDocument();
   });
 
   it("não ancora o dashboard em agosto quando os lançamentos mais recentes são anteriores", () => {
-    render(<DashboardView transactions={[{ id: 1, date: "2026-06-05", type: "despesa", amount: 120, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" }]} />);
+    render(<DashboardView transactions={[{ id: "test-1", date: "2026-06-05", type: "despesa", amount: 120, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "" }]} />);
     expect(screen.getByText("junho 2026")).toBeInTheDocument();
   });
 

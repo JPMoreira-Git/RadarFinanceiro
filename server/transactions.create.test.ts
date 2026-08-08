@@ -74,15 +74,15 @@ describe("transactions.create", () => {
   it("exclui uma transação usando o ID recebido", async () => {
     deleteMock.mockResolvedValueOnce(undefined);
     const caller = appRouter.createCaller(createContext());
-    await caller.transactions.delete({ id: 42 });
-    expect(deleteMock).toHaveBeenCalledWith(42);
+    await caller.transactions.delete({ id: "11111111-1111-4111-8111-111111111111" });
+    expect(deleteMock).toHaveBeenCalledWith("11111111-1111-4111-8111-111111111111");
   });
 
   it("exclui todas as parcelas em uma única operação em lote", async () => {
     deleteManyMock.mockResolvedValueOnce(undefined);
     const caller = appRouter.createCaller(createContext());
-    await caller.transactions.deleteMany({ ids: [10, 11, 12] });
-    expect(deleteManyMock).toHaveBeenCalledWith([10, 11, 12]);
+    await caller.transactions.deleteMany({ ids: ["22222222-2222-4222-8222-222222222222", "33333333-3333-4333-8333-333333333333", "44444444-4444-4444-8444-444444444444"] });
+    expect(deleteManyMock).toHaveBeenCalledWith(["22222222-2222-4222-8222-222222222222", "33333333-3333-4333-8333-333333333333", "44444444-4444-4444-8444-444444444444"]);
   });
 });
 

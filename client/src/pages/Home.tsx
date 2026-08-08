@@ -45,7 +45,7 @@ import {
 
 type TransactionType = "receita" | "despesa";
 type Transaction = {
-  id: number;
+  id: string;
   date: string;
   type: TransactionType;
   amount: number;
@@ -71,7 +71,7 @@ const categories: Record<string, string[]> = {
 };
 
 type RemoteTransactionRow = {
-  id: number;
+  id: string;
   descricao: string;
   valor: number;
   data: string;
@@ -89,7 +89,7 @@ export function normalizeRemoteTransactionType(value: unknown): TransactionType 
 export function mapSupabaseTransaction(row: RemoteTransactionRow): Transaction {
   const [category = "Outros", subcategory = "Geral", ...noteParts] = row.descricao.split(" · ");
   return {
-    id: Number(row.id),
+    id: row.id,
     date: String(row.data).slice(0, 10),
     type: normalizeRemoteTransactionType(row.tipo),
     amount: Number(row.valor),
@@ -113,7 +113,7 @@ export function handleDeleteError(error: unknown) {
   return message;
 }
 
-export async function deleteTransactionRemotely(id: number, mutation: { mutateAsync: (input: { id: number }) => Promise<unknown> }, onSuccess: () => void, refetch: () => Promise<unknown>) {
+export async function deleteTransactionRemotely(id: string, mutation: { mutateAsync: (input: { id: string }) => Promise<unknown> }, onSuccess: () => void, refetch: () => Promise<unknown>) {
   try {
     await mutation.mutateAsync({ id });
     await refetch();
@@ -124,7 +124,7 @@ export async function deleteTransactionRemotely(id: number, mutation: { mutateAs
   }
 }
 
-export async function deleteTransactionsRemotely(ids: number[], mutation: { mutateAsync: (input: { ids: number[] }) => Promise<unknown> }, onSuccess: () => void, refetch: () => Promise<unknown>) {
+export async function deleteTransactionsRemotely(ids: string[], mutation: { mutateAsync: (input: { ids: string[] }) => Promise<unknown> }, onSuccess: () => void, refetch: () => Promise<unknown>) {
   try {
     if (ids.length === 0) throw new Error("Nenhuma parcela válida para excluir.");
     await mutation.mutateAsync({ ids });
@@ -143,15 +143,15 @@ export function transactionMonthOptions(transactions: Transaction[]) {
 }
 
 const seedTransactions: Transaction[] = [
-  { id: 1, date: "2026-08-05", type: "despesa", amount: 482.7, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "Compras da semana" },
-  { id: 2, date: "2026-08-04", type: "receita", amount: 1640, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "Rendimento mensal" },
-  { id: 3, date: "2026-08-03", type: "despesa", amount: 285.9, category: "Moradia", subcategory: "Condomínio", responsible: "Danieli", payment: "Débito automático", note: "" },
-  { id: 4, date: "2026-08-02", type: "despesa", amount: 197.5, category: "Saúde e Bem-estar", subcategory: "Academia", responsible: "Danieli", payment: "Cartão principal", note: "Mensalidade" },
-  { id: 5, date: "2026-08-01", type: "receita", amount: 9200, category: "Receitas", subcategory: "Salário", responsible: "Danieli", payment: "Conta conjunta", note: "Salário mensal" },
-  { id: 6, date: "2026-07-28", type: "despesa", amount: 620, category: "Transporte", subcategory: "Combustível", responsible: "João Paulo", payment: "Cartão principal", note: "" },
-  { id: 7, date: "2026-07-25", type: "receita", amount: 8900, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "Salário mensal" },
-  { id: 8, date: "2026-07-20", type: "despesa", amount: 2400, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
-  { id: 9, date: "2026-07-15", type: "receita", amount: 1580, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "Rendimento mensal" },
+  { id: "local-1", date: "2026-08-05", type: "despesa", amount: 482.7, category: "Alimentação", subcategory: "Supermercado", responsible: "João Paulo", payment: "Cartão principal", note: "Compras da semana" },
+  { id: "local-2", date: "2026-08-04", type: "receita", amount: 1640, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "Rendimento mensal" },
+  { id: "local-3", date: "2026-08-03", type: "despesa", amount: 285.9, category: "Moradia", subcategory: "Condomínio", responsible: "Danieli", payment: "Débito automático", note: "" },
+  { id: "local-4", date: "2026-08-02", type: "despesa", amount: 197.5, category: "Saúde e Bem-estar", subcategory: "Academia", responsible: "Danieli", payment: "Cartão principal", note: "Mensalidade" },
+  { id: "local-5", date: "2026-08-01", type: "receita", amount: 9200, category: "Receitas", subcategory: "Salário", responsible: "Danieli", payment: "Conta conjunta", note: "Salário mensal" },
+  { id: "local-6", date: "2026-07-28", type: "despesa", amount: 620, category: "Transporte", subcategory: "Combustível", responsible: "João Paulo", payment: "Cartão principal", note: "" },
+  { id: "local-7", date: "2026-07-25", type: "receita", amount: 8900, category: "Receitas", subcategory: "Salário", responsible: "João Paulo", payment: "Conta conjunta", note: "Salário mensal" },
+  { id: "local-8", date: "2026-07-20", type: "despesa", amount: 2400, category: "Moradia", subcategory: "Aluguel", responsible: "João Paulo", payment: "Conta conjunta", note: "" },
+  { id: "local-9", date: "2026-07-15", type: "receita", amount: 1580, category: "Receitas", subcategory: "Rendimento de investimentos", responsible: "João Paulo", payment: "Conta investimentos", note: "Rendimento mensal" },
 ];
 
 const waterfallMonths = [
@@ -344,7 +344,7 @@ export function NewTransaction({ onAdd, categoriesData, payments }: { onAdd: (tr
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-semibold text-[#71847a]">{label}</span>{children}</label>; }
 
-export function TransactionsView({ transactions, onDelete, onDeleteGroup, onUpdate, onUpdateGroup, categoriesData, payments }: { transactions: Transaction[]; onDelete: (id: number) => void; onDeleteGroup: (groupId: string) => void; onUpdate: (transaction: Transaction) => void; onUpdateGroup: (groupId: string, total: number, note: string, payment: string) => void; categoriesData: Record<string, string[]>; payments: string[] }) {
+export function TransactionsView({ transactions, onDelete, onDeleteGroup, onUpdate, onUpdateGroup, categoriesData, payments }: { transactions: Transaction[]; onDelete: (id: string) => void; onDeleteGroup: (groupId: string) => void; onUpdate: (transaction: Transaction) => void; onUpdateGroup: (groupId: string, total: number, note: string, payment: string) => void; categoriesData: Record<string, string[]>; payments: string[] }) {
   const [filter, setFilter] = useState("Todos");
   const [responsible, setResponsible] = useState("Todos");
   const [payment, setPayment] = useState("Todos");
@@ -358,7 +358,7 @@ export function TransactionsView({ transactions, onDelete, onDeleteGroup, onUpda
   const [fromDate, setFromDate] = useState(currentRange.from);
   const [toDate, setToDate] = useState(currentRange.to);
   const [search, setSearch] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editPayment, setEditPayment] = useState("");
@@ -418,9 +418,9 @@ export default function Home() {
   const removePayment = (name: string) => setPayments((current) => current.filter((item) => item !== name));
   const updateTransaction = (transaction: Transaction) => setTransactions((current) => current.map((item) => item.id === transaction.id ? transaction : item));
   const updateTransactionGroup = (groupId: string, total: number, note: string, payment: string) => setTransactions((current) => { const group = current.filter((item) => item.installmentGroupId === groupId).sort((a, b) => (a.installmentNumber ?? 0) - (b.installmentNumber ?? 0)); const values = splitInstallments(total, group.length); return current.map((item) => { const index = group.findIndex((entry) => entry.id === item.id); return index >= 0 ? { ...item, amount: values[index], note: note ? `Parcela ${index + 1}/${group.length} · ${note}` : `Parcela ${index + 1}/${group.length}`, payment } : item; }); });
-  const deleteTransaction = (id: number) => deleteTransactionRemotely(id, deleteTransactionMutation, () => setTransactions((current) => current.filter((item) => item.id !== id)), remoteTransactionsQuery.refetch);
+  const deleteTransaction = (id: string) => deleteTransactionRemotely(id, deleteTransactionMutation, () => setTransactions((current) => current.filter((item) => item.id !== id)), remoteTransactionsQuery.refetch);
   const deleteTransactionGroup = (groupId: string) => {
-    const ids = transactions.filter((item) => item.installmentGroupId === groupId).map((item) => item.id).filter((id) => id > 0);
+    const ids = transactions.filter((item) => item.installmentGroupId === groupId).map((item) => item.id).filter((id) => id.trim().length > 0);
     return deleteTransactionsRemotely(ids, deleteTransactionsMutation, () => setTransactions((current) => current.filter((item) => item.installmentGroupId !== groupId)), remoteTransactionsQuery.refetch);
   };
   const view = useMemo(() => location === "/lancamentos" ? "transactions" : location === "/novo" ? "new" : location === "/configuracoes" ? "settings" : "dashboard", [location]);

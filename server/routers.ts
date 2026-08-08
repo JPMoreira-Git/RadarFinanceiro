@@ -22,13 +22,13 @@ export const appRouter = router({
   transactions: router({
     list: protectedProcedure.query(async () => listSupabaseTransactions()),
     delete: protectedProcedure
-      .input(z.object({ id: z.number().int().positive() }))
+      .input(z.object({ id: z.string().uuid() }))
       .mutation(async ({ input }) => {
         await deleteSupabaseTransaction(input.id);
         return { success: true } as const;
       }),
     deleteMany: protectedProcedure
-      .input(z.object({ ids: z.array(z.number().int().positive()).min(1) }))
+      .input(z.object({ ids: z.array(z.string().uuid()).min(1) }))
       .mutation(async ({ input }) => {
         await deleteSupabaseTransactions(input.ids);
         return { success: true } as const;

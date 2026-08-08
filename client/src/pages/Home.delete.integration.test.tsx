@@ -17,7 +17,7 @@ vi.mock("wouter", () => ({
 vi.mock("@/lib/trpc", () => ({
   trpc: {
     transactions: {
-      list: { useQuery: () => ({ data: [{ id: 42, descricao: "Moradia · Aluguel", valor: 100, data: "2026-08-05", tipo: "despesa", forma_pagamento: "Pix", parcelas: 1, responsavel: "Ambos" }], refetch: mocks.refetch }) },
+      list: { useQuery: () => ({ data: [{ id: "55555555-5555-4555-8555-555555555555", descricao: "Moradia · Aluguel", valor: 100, data: "2026-08-05", tipo: "despesa", forma_pagamento: "Pix", parcelas: 1, responsavel: "Ambos" }], refetch: mocks.refetch }) },
       create: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       delete: { useMutation: () => ({ mutateAsync: mocks.deleteMutateAsync }) },
       deleteMany: { useMutation: () => ({ mutateAsync: mocks.deleteManyMutateAsync }) },
@@ -38,7 +38,7 @@ describe("Home exclusão remota", () => {
     mocks.refetch.mockResolvedValueOnce({});
     render(<Home />);
     await userEvent.click(screen.getByRole("button", { name: "Excluir" }));
-    expect(mocks.deleteMutateAsync).toHaveBeenCalledWith({ id: 42 });
+    expect(mocks.deleteMutateAsync).toHaveBeenCalledWith({ id: "55555555-5555-4555-8555-555555555555" });
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 

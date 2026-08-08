@@ -167,7 +167,13 @@
 - [x] Fazer delete do grupo de parcelas via mutation/backend antes de setTransactions
 - [x] Garantir toast.error e preservação da tela quando a exclusão falhar
 - [x] Atualizar testes e validar a correção das exclusões
-- [ ] Salvar e publicar a correção das exclusões em novo checkpoint
+- [x] Salvar e publicar a correção das exclusões em novo checkpoint
+
+- [x] Migrar o id de Transaction e os IDs de exclusão para string UUID
+- [x] Atualizar schemas Zod/tRPC, Supabase e frontend removendo Number/parseInt
+- [x] Atualizar testes e auditar conversões numéricas
+- [ ] Salvar e publicar a migração dos IDs para UUID string
+- [x] Corrigir a formatação do bloco final de todo.md para separar corretamente os itens da migração UUID
 - [x] Adicionar teste de UI do clique em excluir verificando o ID enviado à mutation
 - [x] Adicionar teste de integração do Home confirmando mutateAsync({ id }) no fluxo real
 - [x] Cobrir o componente Home com mutation tRPC mockada, clique em Excluir e ID correto

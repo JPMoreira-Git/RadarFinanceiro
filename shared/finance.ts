@@ -36,7 +36,7 @@ export type InstallmentTransactionInput = {
 };
 
 export type InstallmentTransactionOutput = InstallmentTransactionInput & {
-  id: number;
+  id: string;
   date: string;
   amount: number;
   installmentGroupId?: string;
@@ -58,7 +58,7 @@ export function buildInstallmentTransactions(input: InstallmentTransactionInput)
   const groupId = count > 1 ? `parcelado-${input.idSeed}` : undefined;
   return values.map((amount, index) => ({
     ...input,
-    id: input.idSeed + index,
+    id: `${input.idSeed}-${index}`,
     date: installmentDate(input.date, index),
     amount,
     note: count > 1 ? `Parcela ${index + 1}/${count}${input.note ? ` · ${input.note}` : ""}` : input.note,
@@ -107,7 +107,7 @@ export function aggregateMonthly<T extends { date: string; type: "receita" | "de
   });
 }
 
-export function removeTransactionScope<T extends { id: number; installmentGroupId?: string }>(transactions: T[], target: T, scope: "item" | "group") {
+export function removeTransactionScope<T extends { id: string; installmentGroupId?: string }>(transactions: T[], target: T, scope: "item" | "group") {
   return transactions.filter((item) => scope === "group" && target.installmentGroupId ? item.installmentGroupId !== target.installmentGroupId : item.id !== target.id);
 }
 

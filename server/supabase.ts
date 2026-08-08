@@ -52,7 +52,7 @@ export function toSupabaseTransactionRow(transaction: SupabaseTransactionInput):
 }
 
 export type SupabaseTransactionRow = {
-  id: number;
+  id: string;
   descricao: string;
   valor: number;
   data: string;
@@ -72,7 +72,7 @@ export async function listSupabaseTransactions(): Promise<SupabaseTransactionRow
   }
   return (data ?? []).map((row) => ({
     ...(row as SupabaseTransactionRow),
-    id: Number((row as SupabaseTransactionRow).id),
+    id: (row as SupabaseTransactionRow).id,
     valor: Number((row as SupabaseTransactionRow).valor),
     data: String((row as SupabaseTransactionRow).data).slice(0, 10),
     tipo: normalizeSupabaseType((row as SupabaseTransactionRow).tipo),
@@ -84,14 +84,14 @@ export function normalizeSupabaseType(value: unknown): "receita" | "despesa" {
   return normalized === "receita" || normalized === "income" || normalized === "entrada" ? "receita" : "despesa";
 }
 
-export async function deleteSupabaseTransaction(id: number) {
-  if (!Number.isInteger(id) || id <= 0) throw new Error("ID de transação inválido.");
+export async function deleteSupabaseTransaction(id: string) {
+  if (!id.trim()) throw new Error("ID de transação inválido.");
   const { error } = await getSupabaseClient().from("transacoes").delete().eq("id", id);
   if (error) throw new Error(`Não foi possível excluir a transação no Supabase: ${error.message}`);
 }
 
-export async function deleteSupabaseTransactions(ids: number[]) {
-  const validIds = ids.filter((id) => Number.isInteger(id) && id > 0);
+export async function deleteSupabaseTransactions(ids: string[]) {
+  const validIds = ids.filter((id) => id.trim().length > 0);
   if (validIds.length === 0) throw new Error("Nenhuma transação válida para excluir.");
   const { error } = await getSupabaseClient().from("transacoes").delete().in("id", validIds);
   if (error) throw new Error(`Não foi possível excluir as transações no Supabase: ${error.message}`);
