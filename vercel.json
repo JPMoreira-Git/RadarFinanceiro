@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm build",
   "env": {
     "NODE_ENV": "production"
   },
