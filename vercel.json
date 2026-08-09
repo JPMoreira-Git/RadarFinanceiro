@@ -3,10 +3,5 @@
   "buildCommand": "pnpm install --frozen-lockfile && pnpm build",
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "server/_core/index.ts": {
-      "runtime": "nodejs20.x"
-    }
   }
 }
